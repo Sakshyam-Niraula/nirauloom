@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+
+Disallow: /dashboard
+Disallow: /submit
+Disallow: /moderation
+Disallow: /auth
+Disallow: /auth/callback
+
+Sitemap: https://nirauloom.pages.dev/sitemap.xml
