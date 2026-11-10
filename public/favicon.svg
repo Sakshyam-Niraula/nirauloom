@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <linearGradient id="n-grad-1" x1="8" y1="8" x2="56" y2="56" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#E8DCC5"/>
+      <stop offset="50%" stop-color="#8B5CF6"/>
+      <stop offset="100%" stop-color="#173F35"/>
+    </linearGradient>
+    <linearGradient id="n-grad-2" x1="56" y1="8" x2="8" y2="56" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#8B5CF6"/>
+      <stop offset="100%" stop-color="#E8DCC5"/>
+    </linearGradient>
+  </defs>
+  <!-- Background Disc with Subtle Glow -->
+  <rect width="64" height="64" rx="16" fill="#0D2620"/>
+  <rect x="0.5" y="0.5" width="63" height="63" rx="15.5" stroke="#E8DCC5" stroke-opacity="0.18"/>
+  
+  <!-- Interwoven Geometric 'N' Symbol: Loom & Creation -->
+  <!-- Left Pillar -->
+  <path d="M16 14C16 12.8954 16.8954 12 18 12H22C23.1046 12 24 12.8954 24 14V50C24 51.1046 23.1046 52 22 52H18C16.8954 52 16 51.1046 16 50V14Z" fill="#E8DCC5"/>
+  
+  <!-- Right Pillar -->
+  <path d="M40 14C40 12.8954 40.8954 12 42 12H46C47.1046 12 48 12.8954 48 14V50C48 51.1046 47.1046 52 46 52H42C40.8954 52 40 51.1046 40 50V14Z" fill="#E8DCC5"/>
+  
+  <!-- Interlocking Diagonal Warp/Weft 1 -->
+  <path d="M19 15L45 49" stroke="#8B5CF6" stroke-width="7" stroke-linecap="round"/>
+  
+  <!-- Intersecting Weave Notch for Depth -->
+  <path d="M26 23L38 39" stroke="#E8DCC5" stroke-width="3" stroke-linecap="round" stroke-opacity="0.85"/>
+  <circle cx="32" cy="32" r="3.5" fill="#8B5CF6"/>
+</svg>
