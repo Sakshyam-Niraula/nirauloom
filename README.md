@@ -66,17 +66,19 @@ Copy `.env.example` to `.env`:
 ```env
 VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
-VITE_GEMINI_API_KEY=your-gemini-api-key
+GEMINI_API_KEY=your-gemini-api-key
 ```
 
-> **Note**: If environment variables are omitted, NIRAULOOM automatically operates in **Local Interactive Preview Mode** with persistent local storage, seed creations, and intelligent heuristic search so every feature is immediately testable.
+
+> Keep `GEMINI_API_KEY` server-side only. Never use a `VITE_` prefix for Gemini secrets. In Cloudflare Pages, add it as a server-side secret environment variable. The Supabase URL and publishable key are safe to expose in the frontend.
 
 ### 3. Database Migration (Supabase)
 
 1. Open your Supabase project dashboard.
-2. Navigate to the **SQL Editor**.
-3. Run `supabase/schema.sql` to generate tables, indexes, triggers, and Row Level Security policies.
-4. Run `supabase/seed.sql` to populate the 15 core categories, subcategories, tags, and initial creations.
+2. Apply the current, security-reviewed database migrations for your environment.
+3. Run the category, subcategory, and tag seed statements from `supabase/seed.sql` if they are not already present.
+
+> Do not rerun the original `supabase/schema.sql` against an existing production database without reviewing it first; it contains the original policies and is not the hardened migration currently applied to the live project.
 
 ### 4. Running Locally
 
