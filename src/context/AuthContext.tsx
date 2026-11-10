@@ -22,38 +22,46 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const LOCAL_STORAGE_USER_KEY = 'nirauloom_active_user';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // If Supabase is configured, start strictly with null and wait for real session
+  // If in preview mode, load from localStorage or default to Elena
   const [user, setUser] = useState<Profile | null>(() => {
+    if (isSupabaseConfigured) {
+      return null;
+    }
     const saved = localStorage.getItem(LOCAL_STORAGE_USER_KEY);
     if (saved) {
       try {
         return JSON.parse(saved);
       } catch {
-        return SEED_PROFILES[0]; // Default to Elena (Admin)
+        return SEED_PROFILES[0];
       }
     }
-    return SEED_PROFILES[0]; // Default active demo user is Elena Rostova (Admin)
+    return SEED_PROFILES[0];
   });
+
   const [session, setSession] = useState<unknown>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     if (isSupabaseConfigured && supabase) {
-      // Fetch initial live session
+      // 1. Fetch initial live session
       supabase.auth.getSession().then(({ data: { session } }) => {
         setSession(session);
         if (session?.user) {
           fetchSupabaseProfile(session.user.id);
         } else {
+          setUser(null);
           setLoading(false);
         }
       });
 
+      // 2. Subscribe to auth state changes
       const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
         setSession(session);
         if (session?.user) {
           fetchSupabaseProfile(session.user.id);
         } else {
-          // If logged out from live supabase, don't destroy local profile if in preview
+          setUser(null);
           setLoading(false);
         }
       });
@@ -75,7 +83,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (!error && data) {
         setUser(data);
-        localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(data));
+      } else {
+        // Fallback profile if profile row wasn't created yet by trigger
+        const { data: authData } = await supabase.auth.getUser();
+        if (authData.user) {
+          const fallbackProfile: Profile = {
+            id: authData.user.id,
+            username: authData.user.email?.split('@')[0] || 'creator',
+            display_name: authData.user.user_metadata?.full_name || authData.user.email?.split('@')[0] || 'Creator',
+            avatar_url: authData.user.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/identicon/svg?seed=${authData.user.id}`,
+            is_admin: false,
+            created_at: new Date().toISOString(),
+          };
+          setUser(fallbackProfile);
+        }
       }
     } catch (e) {
       console.warn('Could not fetch Supabase profile:', e);
@@ -91,7 +112,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return {};
     }
 
-    // Local simulated auth
+    // Local simulated auth (preview mode only)
     const matched = SEED_PROFILES.find(p => p.username.toLowerCase() === email.toLowerCase() || p.id === email) || {
       id: `user-${Date.now()}`,
       username: email.split('@')[0].replace(/[^a-zA-Z0-9_]/g, '') || 'explorer',
@@ -150,9 +171,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return {};
     }
 
-    // Notice for developer if not configured
     return {
-      error: `Supabase OAuth for ${provider.toUpperCase()} requires configuring client ID & secret in your Supabase Dashboard under Authentication -> Providers.`
+      error: `Live ${provider.toUpperCase()} OAuth requires configuring client ID and secret in your Supabase dashboard.`
     };
   };
 
@@ -178,22 +198,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const updateProfile = async (updates: Partial<Profile>): Promise<{ error?: string }> => {
     if (!user) return { error: 'Not authenticated' };
 
-    const updated = { ...user, ...updates };
+    // Disallow elevating is_admin on client side
+    const safeUpdates = { ...updates };
+    delete safeUpdates.is_admin;
+
+    const updated = { ...user, ...safeUpdates };
     setUser(updated);
-    localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(updated));
 
     if (isSupabaseConfigured && supabase) {
       const { error } = await supabase
         .from('profiles')
-        .update(updates)
+        .update(safeUpdates)
         .eq('id', user.id);
       if (error) return { error: error.message };
+    } else {
+      localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(updated));
     }
 
     return {};
   };
 
+  /**
+   * Test persona switching: STRICTLY prohibited when Supabase is configured!
+   * Only active during local sandbox evaluation.
+   */
   const switchDemoUser = (profileId: string) => {
+    if (isSupabaseConfigured) {
+      console.warn('Test persona switching is disabled when live Supabase authentication is active.');
+      return;
+    }
     const found = SEED_PROFILES.find(p => p.id === profileId);
     if (found) {
       setUser(found);

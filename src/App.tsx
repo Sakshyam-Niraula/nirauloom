@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { PlatformProvider } from './context/PlatformContext';
 import { Layout } from './components/layout/Layout';
+import { ProtectedRoute } from './components/auth/ProtectedRoute';
 
 // Pages
 import { HomePage } from './pages/HomePage';
@@ -35,9 +36,33 @@ export function App() {
               <Route path="/collections/:slug" element={<CollectionDetailPage />} />
               <Route path="/creators" element={<CreatorsPage />} />
               <Route path="/creators/:username" element={<CreatorProfilePage />} />
-              <Route path="/submit" element={<SubmitPage />} />
-              <Route path="/dashboard" element={<DashboardPage />} />
-              <Route path="/moderation" element={<ModerationPage />} />
+              
+              {/* Protected Authenticated Routes */}
+              <Route 
+                path="/submit" 
+                element={
+                  <ProtectedRoute>
+                    <SubmitPage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/dashboard" 
+                element={
+                  <ProtectedRoute>
+                    <DashboardPage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/moderation" 
+                element={
+                  <ProtectedRoute adminOnly>
+                    <ModerationPage />
+                  </ProtectedRoute>
+                } 
+              />
+              
               <Route path="/ai-discover" element={<AIDiscoverPage />} />
               <Route path="/auth" element={<AuthPage />} />
               <Route path="/auth/callback" element={<AuthCallbackPage />} />

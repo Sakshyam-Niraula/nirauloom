@@ -1,12 +1,5 @@
 import { Creation, Category } from '../types';
-
-const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || '';
-
-export const isGeminiConfigured = Boolean(
-  GEMINI_API_KEY && 
-  GEMINI_API_KEY.length > 10 && 
-  !GEMINI_API_KEY.includes('placeholder')
-);
+import { supabase, isSupabaseConfigured } from './supabase';
 
 interface GeminiSuggestion {
   name?: string;
@@ -30,51 +23,41 @@ interface AIDiscoveryResult {
 }
 
 /**
- * Call Gemini REST API directly using standard fetch with compact token usage
+ * Call secure server-side Gemini endpoint (Cloudflare Pages Function, Supabase Edge Function, or local dev proxy).
+ * Never exposes the GEMINI_API_KEY to the client bundle.
  */
-async function callGemini(prompt: string, systemInstruction?: string): Promise<string | null> {
-  if (!isGeminiConfigured) return null;
-
-  try {
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
-    
-    const body: Record<string, unknown> = {
-      contents: [
-        {
-          parts: [{ text: prompt }]
-        }
-      ],
-      generationConfig: {
-        temperature: 0.2,
-        maxOutputTokens: 600,
-        responseMimeType: "application/json",
+async function callServerSideGemini(prompt: string, systemInstruction?: string): Promise<string | null> {
+  // Option 1: If live Supabase Edge Function is active
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { data, error } = await supabase.functions.invoke('gemini-ai', {
+        body: { prompt, systemInstruction }
+      });
+      if (!error && data?.text) {
+        return data.text;
       }
-    };
-
-    if (systemInstruction) {
-      body.systemInstruction = {
-        parts: [{ text: systemInstruction }]
-      };
+    } catch {
+      // Continue to try /api/gemini
     }
+  }
 
-    const res = await fetch(endpoint, {
+  // Option 2: Cloudflare Pages / Local Dev Proxy endpoint /api/gemini
+  try {
+    const res = await fetch('/api/gemini', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
+      body: JSON.stringify({ prompt, systemInstruction })
     });
 
-    if (!res.ok) {
-      console.warn(`Gemini API error: ${res.status} ${res.statusText}`);
-      return null;
+    if (res.ok) {
+      const data = await res.json();
+      return data.text || null;
     }
-
-    const data = await res.json();
-    const candidate = data.candidates?.[0]?.content?.parts?.[0]?.text;
-    return candidate || null;
-  } catch (err) {
-    console.error('Error contacting Gemini service:', err);
-    return null;
+  } catch {
+    // Falls back to heuristic engine below
   }
+
+  return null;
 }
 
 /**
@@ -105,7 +88,7 @@ Provide concise, high quality metadata as JSON:
   "origin_country": "Probable country or Global"
 }`;
 
-  const rawJson = await callGemini(
+  const rawJson = await callServerSideGemini(
     prompt,
     "You are NIRAULOOM AI Creation Assistant. Return valid JSON only. Keep answers concise, factual, and strictly aligned with the available category list."
   );
@@ -124,7 +107,7 @@ Provide concise, high quality metadata as JSON:
     }
   }
 
-  // Heuristic analysis fallback (no API key or network error)
+  // Heuristic analysis fallback (server key unavailable or network error)
   const lowerUrl = url.toLowerCase();
   const lowerName = name.toLowerCase();
   const lowerNotes = (userNotes || '').toLowerCase();
@@ -188,7 +171,6 @@ export async function naturalLanguageDiscover(
     };
   }
 
-  // First check if Gemini is available to parse intent
   const prompt = `Given this user search query: "${trimmed}"
 And this set of digital platform creations:
 ${JSON.stringify(approvedCreations.map(c => ({ id: c.id, name: c.name, tagline: c.tagline, category: c.category_id, tags: c.tags, pricing: c.pricing_type, student: c.is_student_indie })))}
@@ -202,7 +184,7 @@ Match the query strictly against the real provided creations above. Return JSON:
   "audience": "e.g. students, developers, designers, or general"
 }`;
 
-  const geminiResponse = await callGemini(
+  const geminiResponse = await callServerSideGemini(
     prompt,
     "You are NIRAULOOM Search AI. ONLY match provided database IDs. Never invent or hallucinate items."
   );
@@ -228,7 +210,7 @@ Match the query strictly against the real provided creations above. Return JSON:
     }
   }
 
-  // Smart Deterministic Matching Engine
+  // Deterministic Semantic Matching Engine
   const tokens = trimmed.toLowerCase().split(/[\s,]+/).filter(Boolean);
   const isStudentQuery = tokens.some(t => ['student', 'students', 'college', 'university', 'undergrad', 'academic'].includes(t));
   const isFreeQuery = tokens.some(t => ['free', 'freemium', 'open-source', 'opensource', 'gratis'].includes(t));
@@ -240,9 +222,7 @@ Match the query strictly against the real provided creations above. Return JSON:
 
   const scored = approvedCreations.map(creation => {
     let score = 0;
-    const fullText = `${creation.name} ${creation.tagline} ${creation.description} ${creation.category_id} ${(creation.tags || []).join(' ')} ${creation.pricing_type} ${creation.origin_country}`.toLowerCase();
 
-    // Direct token hits
     for (const t of tokens) {
       if (creation.name.toLowerCase().includes(t)) score += 15;
       if (creation.tagline.toLowerCase().includes(t)) score += 8;
@@ -251,7 +231,6 @@ Match the query strictly against the real provided creations above. Return JSON:
       if (creation.category_id.toLowerCase().includes(t)) score += 8;
     }
 
-    // Intent boosts
     if (isStudentQuery && (creation.is_student_indie || creation.tags?.includes('student-built'))) score += 20;
     if (isFreeQuery && (creation.pricing_type === 'Free' || creation.pricing_type === 'Open Source')) score += 12;
     if (isAIQuery && creation.category_id === 'ai-machine-learning') score += 16;
@@ -349,3 +328,4 @@ export async function generateAICollection(
     items: selectedItems
   };
 }
+export const isGeminiConfigured = true;

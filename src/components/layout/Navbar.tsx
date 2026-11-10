@@ -17,7 +17,7 @@ import { Logo } from '../brand/Logo';
 import { useAuth } from '../../context/AuthContext';
 
 export const Navbar: React.FC = () => {
-  const { user, signOut, switchDemoUser } = useAuth();
+  const { user, signOut, switchDemoUser, isLiveSupabase } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
