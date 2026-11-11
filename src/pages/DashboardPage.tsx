@@ -13,7 +13,8 @@ import {
   PlusCircle,
   Save,
   ShieldCheck,
-  Heart
+  Heart,
+  RefreshCw
 } from 'lucide-react';
 import { usePlatform } from '../context/PlatformContext';
 import { useAuth } from '../context/AuthContext';
@@ -24,7 +25,7 @@ export const DashboardPage: React.FC = () => {
   const initialTab = (searchParams.get('tab') as 'creations' | 'bookmarks' | 'collections' | 'settings') || 'creations';
   const [activeTab, setActiveTab] = useState(initialTab);
 
-  const { creations, bookmarks, collections, deleteCreation } = usePlatform();
+  const { creations, bookmarks, collections, deleteCreation, refreshCreations, loading } = usePlatform();
   const { user, updateProfile } = useAuth();
 
   // Settings form state
@@ -100,13 +101,24 @@ export const DashboardPage: React.FC = () => {
           </p>
         </div>
 
-        <Link
-          to="/submit"
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-forest-800 hover:bg-forest-700 text-sand-100 text-xs font-semibold border border-sand-200/25 transition-all"
-        >
-          <PlusCircle className="w-4 h-4 text-sand-200" />
-          <span>Submit New Creation</span>
-        </Link>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => void refreshCreations()}
+            disabled={loading}
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-sand-200/20 text-sand-200 text-xs font-semibold hover:bg-forest-800 disabled:opacity-50"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </button>
+          <Link
+            to="/submit"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-forest-800 hover:bg-forest-700 text-sand-100 text-xs font-semibold border border-sand-200/25 transition-all"
+          >
+            <PlusCircle className="w-4 h-4 text-sand-200" />
+            <span>Submit New Creation</span>
+          </Link>
+        </div>
       </div>
 
       {/* Tabs */}
