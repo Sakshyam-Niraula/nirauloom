@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   ShieldCheck, 
+  Bookmark,
+  Bot,
   CheckCircle, 
   XCircle, 
   AlertTriangle, 
@@ -13,12 +15,14 @@ import {
 } from 'lucide-react';
 import { usePlatform } from '../context/PlatformContext';
 import { useAuth } from '../context/AuthContext';
+import { CreationCard } from '../components/creations/CreationCard';
+import { GrowthScoutPage } from './GrowthScoutPage';
 
 export const ModerationPage: React.FC = () => {
-  const { creations, reports, updateCreationStatus, deleteCreation } = usePlatform();
+  const { creations, reports, bookmarks, updateCreationStatus, deleteCreation } = usePlatform();
   const { user } = useAuth();
 
-  const [activeTab, setActiveTab] = useState<'pending' | 'reports' | 'all'>('pending');
+  const [activeTab, setActiveTab] = useState<'pending' | 'reports' | 'all' | 'agents' | 'bookmarks'>('pending');
   const [rejectReasonModal, setRejectReasonModal] = useState<string | null>(null);
   const [rejectionInput, setRejectionInput] = useState('');
 
@@ -102,6 +106,30 @@ export const ModerationPage: React.FC = () => {
         </button>
 
         <button
+          onClick={() => setActiveTab('agents')}
+          className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
+            activeTab === 'agents'
+              ? 'bg-forest-800 text-sand-100 border border-sand-200/20'
+              : 'text-sand-300/70 hover:text-sand-100'
+          }`}
+        >
+          <Bot className="w-4 h-4 text-electric-300" />
+          <span>AI Agents</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('bookmarks')}
+          className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
+            activeTab === 'bookmarks'
+              ? 'bg-forest-800 text-sand-100 border border-sand-200/20'
+              : 'text-sand-300/70 hover:text-sand-100'
+          }`}
+        >
+          <Bookmark className="w-4 h-4" />
+          <span>Bookmarks ({bookmarks.length})</span>
+        </button>
+
+        <button
           onClick={() => setActiveTab('all')}
           className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
             activeTab === 'all'
@@ -113,6 +141,31 @@ export const ModerationPage: React.FC = () => {
           <span>All Submissions ({creations.length})</span>
         </button>
       </div>
+
+      {/* AI Agent workspace */}
+      {activeTab === 'agents' && <GrowthScoutPage />}
+
+      {/* Saved bookmarks */}
+      {activeTab === 'bookmarks' && (
+        <div className="space-y-4">
+          {creations.filter((creation) => bookmarks.includes(creation.id)).length === 0 ? (
+            <div className="py-16 text-center border border-dashed border-sand-200/20 rounded-2xl bg-forest-900/20">
+              <Bookmark className="w-9 h-9 text-sand-300/40 mx-auto mb-3" />
+              <p className="text-sm font-semibold text-sand-200">No bookmarks saved yet</p>
+              <p className="text-xs text-sand-300/60 mt-1">Projects you bookmark while exploring will appear here.</p>
+              <Link to="/explore" className="inline-flex mt-4 px-4 py-2 rounded-xl bg-forest-800 text-sand-100 text-xs font-semibold">
+                Explore projects
+              </Link>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+              {creations.filter((creation) => bookmarks.includes(creation.id)).map((creation) => (
+                <CreationCard key={creation.id} creation={creation} />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Pending Queue */}
       {activeTab === 'pending' && (
