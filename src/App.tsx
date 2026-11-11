@@ -21,6 +21,7 @@ import { AIDiscoverPage } from './pages/AIDiscoverPage';
 import { AuthPage } from './pages/AuthPage';
 import { AuthCallbackPage } from './pages/AuthCallbackPage';
 import { CommunityPage } from './pages/CommunityPage';
+import { GrowthScoutPage } from './pages/GrowthScoutPage';
 
 export function App() {
   return (
