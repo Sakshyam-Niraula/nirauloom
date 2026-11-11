@@ -128,8 +128,8 @@ export const PlatformProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         `)
         .order('created_at', { ascending: false });
 
-      if (!error && data && data.length > 0) {
-        setCreations(data);
+      if (!error && data) {
+        setCreations(data as Creation[]);
       }
     } catch (e) {
       console.warn('Using local dataset as primary source:', e);
@@ -233,7 +233,7 @@ export const PlatformProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       return { success: false, error: 'You must be signed in to submit a creation.' };
     }
 
-    const id = `creation-${Date.now()}`;
+    const id = crypto.randomUUID();
     const matchedCategory = categories.find(c => c.id === data.category_id);
     const matchedSubcategory = subcategories.find(s => s.id === data.subcategory_id);
 
@@ -255,11 +255,9 @@ export const PlatformProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       subcategory: matchedSubcategory,
     };
 
-    setCreations(prev => [newCreation, ...prev]);
-
     if (isSupabaseConfigured && supabase) {
       try {
-        await supabase.from('creations').insert({
+        const { error: insertError } = await supabase.from('creations').insert({
           id,
           creator_id: user.id,
           name: data.name,
@@ -277,11 +275,14 @@ export const PlatformProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           origin_country: data.origin_country || 'Global',
           status,
         });
+        if (insertError) return { success: false, error: insertError.message };
       } catch (err) {
         console.warn('Failed to insert into live Supabase:', err);
+        return { success: false, error: err instanceof Error ? err.message : 'Could not save your project.' };
       }
     }
 
+    setCreations(prev => [newCreation, ...prev]);
     return { success: true, id };
   };
 
@@ -290,27 +291,22 @@ export const PlatformProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     status: SubmissionStatus,
     rejectionReason?: string
   ): Promise<boolean> => {
-    setCreations(prev =>
-      prev.map(c => {
-        if (c.id === creationId) {
-          return {
-            ...c,
-            status,
-            rejection_reason: status === 'rejected' ? rejectionReason : undefined,
-            updated_at: new Date().toISOString(),
-          };
-        }
-        return c;
-      })
-    );
-
     if (isSupabaseConfigured && supabase) {
-      await supabase
+      const { error } = await supabase
         .from('creations')
-        .update({ status, rejection_reason: rejectionReason || null })
+        .update({ status, rejection_reason: rejectionReason || null, updated_at: new Date().toISOString() })
         .eq('id', creationId);
+      if (error) {
+        console.error('Could not update creation status:', error);
+        return false;
+      }
     }
 
+    setCreations(prev =>
+      prev.map(c => c.id === creationId
+        ? { ...c, status, rejection_reason: status === 'rejected' ? rejectionReason : undefined, updated_at: new Date().toISOString() }
+        : c)
+    );
     return true;
   };
 
