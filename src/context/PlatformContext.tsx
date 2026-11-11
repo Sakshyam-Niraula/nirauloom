@@ -127,8 +127,9 @@ export const PlatformProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       }
       if (!isSupabaseConfigured || !supabase) return;
 
+      const client = supabase;
       setBookmarks([]);
-      const { data, error } = await supabase
+      const { data, error } = await client
         .from('bookmarks')
         .select('creation_id')
         .eq('user_id', user.id);
