@@ -115,6 +115,29 @@ export const PlatformProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   }, []);
 
+  // Load the signed-in user's saved projects from Supabase so bookmarks follow
+  // the account across devices instead of relying only on browser localStorage.
+  useEffect(() => {
+    let active = true;
+    if (!isSupabaseConfigured || !supabase || !user) return;
+
+    const loadUserBookmarks = async () => {
+      const { data, error } = await supabase
+        .from('bookmarks')
+        .select('creation_id')
+        .eq('user_id', user.id);
+
+      if (!error && active && data) {
+        setBookmarks(data.map((row: { creation_id: string }) => row.creation_id));
+      }
+    };
+
+    void loadUserBookmarks();
+    return () => {
+      active = false;
+    };
+  }, [user?.id]);
+
   // Load the signed-in user's real bookmarks from Supabase.
   // Bookmarks are protected by the user's own-row RLS policy.
   useEffect(() => {
