@@ -70,7 +70,7 @@ export function App() {
                 path="/growth-scout"
                 element={
                   <ProtectedRoute adminOnly>
-                    <GrowthScoutPage />
+                    <Navigate to="/moderation" replace />
                   </ProtectedRoute>
                 }
               />
