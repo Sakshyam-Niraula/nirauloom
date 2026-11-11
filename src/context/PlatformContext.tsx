@@ -14,6 +14,7 @@ interface PlatformContextType {
   bookmarks: string[]; // creation IDs
   appreciations: string[]; // creation IDs
   loading: boolean;
+  refreshCreations: () => Promise<void>;
   // Actions
   toggleBookmark: (creationId: string) => Promise<boolean>;
   toggleAppreciation: (creationId: string) => Promise<boolean>;
@@ -444,6 +445,7 @@ export const PlatformProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         bookmarks,
         appreciations,
         loading,
+        refreshCreations: loadFromSupabase,
         toggleBookmark,
         toggleAppreciation,
         submitCreation,
