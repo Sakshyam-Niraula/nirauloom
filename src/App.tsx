@@ -20,6 +20,7 @@ import { ModerationPage } from './pages/ModerationPage';
 import { AIDiscoverPage } from './pages/AIDiscoverPage';
 import { AuthPage } from './pages/AuthPage';
 import { AuthCallbackPage } from './pages/AuthCallbackPage';
+import { CommunityPage } from './pages/CommunityPage';
 
 export function App() {
   return (
@@ -30,6 +31,7 @@ export function App() {
             <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/explore" element={<ExplorePage />} />
+              <Route path="/community" element={<CommunityPage />} />
               <Route path="/categories" element={<CategoriesPage />} />
               <Route path="/creations/:slug" element={<CreationDetailPage />} />
               <Route path="/collections" element={<CollectionsPage />} />
