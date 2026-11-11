@@ -127,7 +127,7 @@ export const CommunityPage: React.FC = () => {
     if (commentError) {
       setError(commentError.message);
     } else {
-      setComments(current => ({ ...current, [post.id]: [...(current[post.id] || []), data as FeedComment] }));
+      setComments(current => ({ ...current, [post.id]: [...(current[post.id] || []), data as unknown as FeedComment] }));
       setDrafts(current => ({ ...current, [post.id]: '' }));
       setOpenComments(current => current.includes(post.id) ? current : [...current, post.id]);
     }
