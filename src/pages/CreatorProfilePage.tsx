@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { 
   Globe, 
@@ -12,17 +12,104 @@ import { usePlatform } from '../context/PlatformContext';
 import { useAuth } from '../context/AuthContext';
 import { SEED_PROFILES } from '../data/seedData';
 import { CreationCard } from '../components/creations/CreationCard';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { Profile } from '../types';
 
 export const CreatorProfilePage: React.FC = () => {
   const { username } = useParams<{ username: string }>();
   const { creations, collections } = usePlatform();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
 
   const [activeTab, setActiveTab] = useState<'creations' | 'collections'>('creations');
+  const [creator, setCreator] = useState<Profile | null>(null);
+  const [profileLoading, setProfileLoading] = useState(true);
 
-  // Find creator by username or ID
-  const creator = SEED_PROFILES.find(p => p.username === username || p.id === username) || 
-    (user && (user.username === username || user.id === username) ? user : null);
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadCreator = async () => {
+      if (!username) {
+        setCreator(null);
+        setProfileLoading(false);
+        return;
+      }
+
+      setProfileLoading(true);
+
+      try {
+        // Resolve real public profiles from Supabase first. This makes creator
+        // pages work for visitors who are not signed in as that creator.
+        if (isSupabaseConfigured && supabase) {
+          const { data: byUsername, error: usernameError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('username', username)
+            .maybeSingle();
+
+          if (usernameError) {
+            console.warn('Could not load creator by username:', usernameError);
+          }
+
+          let resolved = byUsername as Profile | null;
+
+          // Support older links that use the creator's UUID instead of username.
+          if (!resolved) {
+            const { data: byId, error: idError } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', username)
+              .maybeSingle();
+
+            if (idError) {
+              console.warn('Could not load creator by ID:', idError);
+            }
+            resolved = byId as Profile | null;
+          }
+
+          if (!cancelled && resolved) {
+            setCreator(resolved);
+            setProfileLoading(false);
+            return;
+          }
+        }
+
+        // Preserve demo profiles and the signed-in user's local profile.
+        const fallback =
+          SEED_PROFILES.find(profile => profile.username === username || profile.id === username) ||
+          (user && (user.username === username || user.id === username) ? user : null);
+
+        if (!cancelled) {
+          setCreator(fallback);
+          setProfileLoading(false);
+        }
+      } catch (error) {
+        console.error('Unexpected error loading creator profile:', error);
+
+        const fallback =
+          SEED_PROFILES.find(profile => profile.username === username || profile.id === username) ||
+          (user && (user.username === username || user.id === username) ? user : null);
+
+        if (!cancelled) {
+          setCreator(fallback);
+          setProfileLoading(false);
+        }
+      }
+    };
+
+    loadCreator();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [username, user]);
+
+  if (profileLoading || authLoading) {
+    return (
+      <div className="max-w-2xl mx-auto py-24 px-4 text-center">
+        <p className="text-sm text-sand-300/70">Loading creator profile...</p>
+      </div>
+    );
+  }
 
   if (!creator) {
     return (
