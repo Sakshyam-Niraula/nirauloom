@@ -66,6 +66,14 @@ export function App() {
                 } 
               />
               
+              <Route
+                path="/growth-scout"
+                element={
+                  <ProtectedRoute adminOnly>
+                    <GrowthScoutPage />
+                  </ProtectedRoute>
+                }
+              />
               <Route path="/ai-discover" element={<AIDiscoverPage />} />
               <Route path="/auth" element={<AuthPage />} />
               <Route path="/auth/callback" element={<AuthCallbackPage />} />
