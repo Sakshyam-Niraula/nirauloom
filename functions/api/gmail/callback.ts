@@ -42,13 +42,13 @@ export const onRequestGet=async({request,env}:{request:Request;env:Env})=>{
   const tokenResponse=await fetch("https://oauth2.googleapis.com/token",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:new URLSearchParams({code,client_id:env.GOOGLE_CLIENT_ID,client_secret:env.GOOGLE_CLIENT_SECRET,redirect_uri:`${APP_URL}/api/gmail/callback`,grant_type:"authorization_code"})});
   const tokens=await tokenResponse.json() as {access_token?:string;refresh_token?:string;error?:string};
   if(!tokenResponse.ok||!tokens.access_token||!tokens.refresh_token){console.error("gmail_callback_token_failed",tokenResponse.status,tokens.error||"missing access or refresh token");return finish("token_error");}
-  stage="gmail_profile_check";
-  const profileResponse=await fetch("https://gmail.googleapis.com/gmail/v1/users/me/profile",{headers:{Authorization:`Bearer ${tokens.access_token}`}});
-  if(!profileResponse.ok){console.error("gmail_callback_profile_failed",profileResponse.status,(await profileResponse.text()).slice(0,300));return finish("profile_error");}
-  const profile=await profileResponse.json() as {emailAddress?:string},email=(profile.emailAddress||"").toLowerCase();
-  if(email!=="hello.nirauloom@gmail.com")return finish("wrong_account");
+  stage="openid_userinfo";
+  const profileResponse=await fetch("https://openidconnect.googleapis.com/v1/userinfo",{headers:{Authorization:`Bearer ${tokens.access_token}`}});
+  if(!profileResponse.ok){console.error("gmail_callback_userinfo_failed",profileResponse.status,(await profileResponse.text()).slice(0,300));return finish("profile_error");}
+  const profile=await profileResponse.json() as {email?:string;email_verified?:boolean},email=(profile.email||"").toLowerCase();
+  if(profile.email_verified!==true||email!=="hello.nirauloom@gmail.com")return finish("wrong_account");
   stage="token_encryption";let encrypted:{ciphertext:string;iv:string};
   try{encrypted=await encryptToken(tokens.refresh_token,env.GOOGLE_TOKEN_ENCRYPTION_KEY);}catch(e){console.error("gmail_callback_encryption_failed",e instanceof Error?e.message:"unknown");return finish("encryption_error");}
   stage="supabase_save";await saveConnection(env,payload.userId,email,encrypted);return finish("connected");
- }catch(e){console.error("gmail_callback_unhandled",stage,e instanceof Error?e.message:"unknown error");return finish("callback_error");}
+ }catch(e){console.error("gmail_callback_unhandled",stage,e instanceof Error?e.message:"unknown error");return finish(stage==="supabase_save"?"save_error":"callback_error");}
 };
