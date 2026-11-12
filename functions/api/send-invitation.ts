@@ -158,11 +158,12 @@ export const onRequestPost = async ({ request, env }: { request: Request; env: E
     const sourceUrl = clean(body.sourceUrl, 1000);
     const sourceTitle = clean(body.sourceTitle, 240);
     const publicContactConfirmed = body.publicContactConfirmed === true;
+    const contactSourceUrl = clean(body.contactSourceUrl, 1000);
 
     if (!opportunityId || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipientEmail)) {
       return json({ error: "Enter a valid creator contact email." }, 400);
     }
-    if (!subject || !message || message.length < 20 || !sourceTitle || !publicContactConfirmed) {
+    if (!subject || !message || message.length < 20 || !sourceTitle || !publicContactConfirmed || !contactSourceUrl) {
       return json({ error: "Review the message and confirm that the recipient email is publicly listed for project contact." }, 400);
     }
     if (/\r|\n/.test(subject)) return json({ error: "Invalid email subject." }, 400);
@@ -172,6 +173,13 @@ export const onRequestPost = async ({ request, env }: { request: Request; env: E
     } catch {
       return json({ error: "A valid HTTPS source link is required." }, 400);
     }
+    try {
+      const contactPage = new URL(contactSourceUrl);
+      if (contactPage.protocol !== "https:") throw new Error("https required");
+    } catch {
+      return json({ error: "Provide the HTTPS page where this project-contact address is publicly listed." }, 400);
+    }
+
     if (recipientEmail === DEFAULT_SENDER) {
       return json({ error: "Use a separate test workflow for the sender's own address." }, 400);
     }
@@ -181,6 +189,16 @@ export const onRequestPost = async ({ request, env }: { request: Request; env: E
       Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
       "Content-Type": "application/json",
     };
+
+    // Respect this admin's suppression list before any send.
+    const suppressionUrl = new URL(`${env.VITE_SUPABASE_URL}/rest/v1/outreach_suppressions`);
+    suppressionUrl.searchParams.set("select", "id");
+    suppressionUrl.searchParams.set("admin_user_id", `eq.${adminId}`);
+    suppressionUrl.searchParams.set("email", `eq.${recipientEmail}`);
+    const suppressionResponse = await fetch(suppressionUrl, { headers: restHeaders });
+    if (!suppressionResponse.ok) return json({ error: "Could not verify the opt-out list. No email was sent." }, 500);
+    const suppressions = await suppressionResponse.json() as Array<{ id: string }>;
+    if (suppressions.length) return json({ error: "This address is on your opt-out list. No email was sent." }, 409);
 
     // Enforce the saved daily ceiling on the server, not only in the interface.
     const settingsUrl = new URL(`${env.VITE_SUPABASE_URL}/rest/v1/outreach_agent_settings`);
