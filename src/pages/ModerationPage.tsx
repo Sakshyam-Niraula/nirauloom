@@ -21,12 +21,15 @@ import { usePlatform } from '../context/PlatformContext';
 import { useAuth } from '../context/AuthContext';
 import { CreationCard } from '../components/creations/CreationCard';
 import { GrowthScoutPage } from './GrowthScoutPage';
+import { CreatorOnboardingPage } from './CreatorOnboardingPage';
+import { GrowthAnalystPage } from './GrowthAnalystPage';
 
 export const ModerationPage: React.FC = () => {
   const { creations, reports, bookmarks, updateCreationStatus, deleteCreation } = usePlatform();
   const { user } = useAuth();
 
   const [activeTab, setActiveTab] = useState<'overview' | 'pending' | 'reports' | 'all' | 'agents' | 'bookmarks'>('overview');
+  const [selectedAgent, setSelectedAgent] = useState<'scout' | 'onboarding' | 'analyst'>('scout');
   const [rejectReasonModal, setRejectReasonModal] = useState<string | null>(null);
   const [rejectionInput, setRejectionInput] = useState('');
 
@@ -202,14 +205,14 @@ export const ModerationPage: React.FC = () => {
 
               <article className="rounded-2xl border border-sand-200/10 bg-forest-900/30 p-5 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] uppercase tracking-wider font-bold text-amber-300">Planned</span>
+                  <span className="text-[10px] uppercase tracking-wider font-bold text-emerald-300">Available</span>
                   <Users className="w-5 h-5 text-sand-300/70" />
                 </div>
                 <div>
                   <h3 className="text-base font-bold text-sand-100">Creator Onboarding</h3>
                   <p className="text-xs text-sand-300/70 mt-1">Turn a public project URL into a suggested Nirauloom listing for your approval.</p>
                 </div>
-                <p className="text-[11px] text-sand-300/45">Not active yet</p>
+                <button onClick={() => { setSelectedAgent("onboarding"); setActiveTab("agents"); }} className="text-xs font-semibold text-electric-300 underline underline-offset-4">Open agent</button>
               </article>
 
               <article className="rounded-2xl border border-sand-200/10 bg-forest-900/30 p-5 space-y-3">
@@ -221,7 +224,7 @@ export const ModerationPage: React.FC = () => {
                   <h3 className="text-base font-bold text-sand-100">Growth Analyst</h3>
                   <p className="text-xs text-sand-300/70 mt-1">Explain visitor-to-signup conversion, popular pages, and where creators drop off.</p>
                 </div>
-                <p className="text-[11px] text-sand-300/45">Not active yet</p>
+                <button onClick={() => { setSelectedAgent("analyst"); setActiveTab("agents"); }} className="text-xs font-semibold text-electric-300 underline underline-offset-4">Open agent</button>
               </article>
             </div>
           </section>
@@ -238,7 +241,18 @@ export const ModerationPage: React.FC = () => {
       )}
 
       {/* AI Agent workspace */}
-      {activeTab === 'agents' && <GrowthScoutPage />}
+      {activeTab === 'agents' && (
+  <div className="space-y-6">
+    <div className="flex flex-wrap gap-2 border-b border-sand-200/10 pb-3">
+      <button onClick={() => setSelectedAgent('scout')} className={selectedAgent === 'scout' ? 'rounded-xl px-4 py-2 text-xs font-semibold bg-forest-800 text-sand-100 border border-sand-200/20' : 'rounded-xl px-4 py-2 text-xs font-semibold text-sand-300/70 hover:text-sand-100'}>Growth Scout</button>
+      <button onClick={() => setSelectedAgent('onboarding')} className={selectedAgent === 'onboarding' ? 'rounded-xl px-4 py-2 text-xs font-semibold bg-forest-800 text-sand-100 border border-sand-200/20' : 'rounded-xl px-4 py-2 text-xs font-semibold text-sand-300/70 hover:text-sand-100'}>Creator Onboarding</button>
+      <button onClick={() => setSelectedAgent('analyst')} className={selectedAgent === 'analyst' ? 'rounded-xl px-4 py-2 text-xs font-semibold bg-forest-800 text-sand-100 border border-sand-200/20' : 'rounded-xl px-4 py-2 text-xs font-semibold text-sand-300/70 hover:text-sand-100'}>Growth Analyst</button>
+    </div>
+    {selectedAgent === 'scout' && <GrowthScoutPage />}
+    {selectedAgent === 'onboarding' && <CreatorOnboardingPage />}
+    {selectedAgent === 'analyst' && <GrowthAnalystPage />}
+  </div>
+)}
 
       {/* Saved bookmarks */}
       {activeTab === 'bookmarks' && (
