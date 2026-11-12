@@ -70,9 +70,15 @@ export const OutreachAgentPage: React.FC = () => {
         wrong_account: "Please authorize with hello.nirauloom@gmail.com, not another Google account.",
         cancelled: "Google authorization was cancelled.",
         invalid_state: "Authorization expired or could not be verified. Please try again.",
-        token_error: "Google did not return a refresh token. Try connecting again and approve access.",
+        token_error: "Google did not return the required refresh token. The token exchange failed; we can diagnose this from the server log.",
+        profile_error: "Google authorization succeeded, but Gmail profile access failed. Check that Gmail sending permission was approved.",
+        encryption_error: "The server could not encrypt the Gmail credential. Check GOOGLE_TOKEN_ENCRYPTION_KEY in Cloudflare.",
+        save_error: "Google authorization worked, but Supabase could not save the connection. Check the outreach_gmail_connections table and service-role key.",
+        missing_config: "A required Cloudflare server secret is missing from the deployed environment.",
+        missing_callback_data: "Google returned without the required authorization details. Start the connection again.",
+        callback_error: "The Gmail callback hit a server error. Cloudflare logs will identify the failing step.",
       };
-      setNotice(messages[gmailResult] || "Gmail connection could not be completed.");
+      setNotice(messages[gmailResult] || `Gmail connection failed at callback stage: ${gmailResult}. The callback now records a safe diagnostic in Cloudflare logs.`);
       window.history.replaceState({}, "", window.location.pathname);
     }
     const loadStatus = async () => {
