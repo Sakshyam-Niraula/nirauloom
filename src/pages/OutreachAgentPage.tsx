@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Activity, Bot, CheckCircle2, Clock3, Mail, PauseCircle, Play, Save, Search, ShieldCheck, Sparkles } from "lucide-react";
+import { Activity, Bot, Mail, PauseCircle, Save, Search, ShieldCheck, Sparkles, Link2, Unlink } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../context/AuthContext";
 
@@ -43,6 +43,8 @@ export const OutreachAgentPage: React.FC = () => {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [lastRun, setLastRun] = useState("");
+  const [gmailStatus, setGmailStatus] = useState<{ connected: boolean; email?: string | null; configured?: boolean }>({ connected: false, configured: false });
+  const [connectingGmail, setConnectingGmail] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -58,6 +60,50 @@ export const OutreachAgentPage: React.FC = () => {
     };
     load();
   }, [user?.id]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const gmailResult = params.get("gmail");
+    if (gmailResult) {
+      const messages: Record<string, string> = {
+        connected: "Gmail connected successfully.",
+        wrong_account: "Please authorize with hello.nirauloom@gmail.com, not another Google account.",
+        cancelled: "Google authorization was cancelled.",
+        invalid_state: "Authorization expired or could not be verified. Please try again.",
+        token_error: "Google did not return a refresh token. Try connecting again and approve access.",
+      };
+      setNotice(messages[gmailResult] || "Gmail connection could not be completed.");
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+    const loadStatus = async () => {
+      if (!supabase) return;
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) return;
+      const response = await fetch("/api/gmail/status", { headers: { Authorization: `Bearer ${session.access_token}`, "X-Supabase-Anon-Key": import.meta.env.VITE_SUPABASE_ANON_KEY } });
+      if (response.ok) setGmailStatus(await response.json());
+    };
+    loadStatus();
+  }, []);
+
+  const connectGmail = async () => {
+    if (!supabase) { setError("Supabase is not configured."); return; }
+    setConnectingGmail(true); setError("");
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) throw new Error("Please sign in again.");
+      const response = await fetch("/api/gmail/connect", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ anonKey: import.meta.env.VITE_SUPABASE_ANON_KEY }),
+      });
+      const result = await response.json();
+      if (!response.ok || !result.authorizationUrl) throw new Error(result.error || "Could not start Gmail authorization.");
+      window.location.assign(result.authorizationUrl);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not connect Gmail.");
+      setConnectingGmail(false);
+    }
+  };
 
   const saveSettings = async () => {
     if (!supabase || !user?.id) { setError("Please sign in with the live admin account."); return; }
@@ -148,10 +194,22 @@ export const OutreachAgentPage: React.FC = () => {
         {!leads.length && !running && <div className="rounded-xl border border-dashed border-sand-200/15 p-8 text-center"><Sparkles className="w-8 h-8 text-sand-300/35 mx-auto mb-2" /><p className="text-sm text-sand-300/60">Run research to see matching creators and draft examples here.</p></div>}
       </section>
 
-      <section className="rounded-2xl border border-amber-400/20 bg-amber-500/5 p-5 space-y-2">
-        <div className="flex items-center gap-2 text-amber-200 font-semibold"><Mail className="w-4 h-4" /> Email connection required</div>
-        <p className="text-xs text-sand-200/75">Your current sender is a Gmail address. The existing server-side sender integration uses Resend and is not configured. A Gmail address cannot be used as a Resend sender without domain verification. Before any automatic sending is enabled, connect a supported Gmail API sender or verify a custom domain with an email provider. The agent stays paused in the meantime.</p>
-        <p className="text-xs text-sand-300/55">Safety rules: only use contact addresses explicitly published for project/business enquiries; respect opt-outs and do-not-contact requests; identify Nirauloom honestly; no guessed addresses, deceptive claims, or repeated follow-ups.</p>
+      <section className="rounded-2xl border border-sand-200/10 bg-forest-900/40 p-5 space-y-3">
+        <div className="flex items-center gap-2 text-sand-100 font-semibold"><Mail className="w-4 h-4" /> Gmail sender connection</div>
+        {gmailStatus.connected ? (
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div><p className="text-sm font-semibold text-emerald-300">Connected</p><p className="text-xs text-sand-300/70">{gmailStatus.email}</p></div>
+            <span className="inline-flex items-center gap-2 rounded-xl border border-emerald-400/20 px-3 py-2 text-xs text-emerald-200"><Link2 className="w-4 h-4" /> Authorized</span>
+          </div>
+        ) : (
+          <>
+            <p className="text-xs text-sand-200/75">Connect the dedicated Nirauloom Gmail account. Google will ask you to sign in and grant the Gmail sending permission.</p>
+            <button onClick={connectGmail} disabled={connectingGmail || gmailStatus.configured === false} className="inline-flex items-center gap-2 rounded-xl bg-electric-600 hover:bg-electric-500 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50"><Link2 className="w-4 h-4" />{connectingGmail ? "Opening Google…" : "Connect Gmail"}</button>
+            {gmailStatus.configured === false && <p className="text-xs text-amber-200/80">Server setup is not complete yet. Add the Cloudflare secrets listed in the setup instructions before connecting.</p>}
+          </>
+        )}
+        <p className="text-xs text-sand-300/55">Connecting Gmail does not enable automatic sending. Outreach remains paused until sending safeguards and a test workflow are implemented.</p>
+        <p className="text-xs text-sand-300/55">Only use contact addresses explicitly published for project/business enquiries; respect opt-outs; identify Nirauloom honestly; never guess addresses or send repeated follow-ups.</p>
       </section>
     </div>
   );
