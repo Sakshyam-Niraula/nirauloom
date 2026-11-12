@@ -10,7 +10,7 @@ interface AuthContextType {
   isLiveSupabase: boolean;
   signInWithPassword: (email: string, pass: string) => Promise<{ error?: string }>;
   signUp: (email: string, pass: string, username: string, displayName: string) => Promise<{ error?: string; message?: string }>;
-  signInWithOAuth: (provider: 'google' | 'github') => Promise<{ error?: string }>;
+  signInWithOAuth: (provider: 'google' | 'github', redirectTo?: string) => Promise<{ error?: string }>;
   resetPassword: (email: string) => Promise<{ error?: string; message?: string }>;
   signOut: () => Promise<void>;
   updateProfile: (updates: Partial<Profile>) => Promise<{ error?: string }>;
@@ -159,12 +159,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return { message: 'Account successfully registered and active!' };
   };
 
-  const signInWithOAuth = async (provider: 'google' | 'github'): Promise<{ error?: string }> => {
+  const signInWithOAuth = async (provider: 'google' | 'github', redirectTo?: string): Promise<{ error?: string }> => {
     if (isSupabaseConfigured && supabase) {
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: redirectTo || `${window.location.origin}/auth/callback`,
         }
       });
       if (error) return { error: error.message };
