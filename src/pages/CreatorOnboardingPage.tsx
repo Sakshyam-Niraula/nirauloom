@@ -18,6 +18,16 @@ export const CreatorOnboardingPage: React.FC = () => {
     try { parsed = new URL(url.trim()); } catch { setError("Enter a valid project URL, including https://."); return; }
     if (!["https:", "http:"].includes(parsed.protocol)) { setError("Only public website URLs are supported."); return; }
     if (!name.trim() || details.trim().length < 30) { setError("Add a project name and at least 30 characters describing what it does."); return; }
+
+    const makeFallbackDraft = (): Draft => ({
+      name: name.trim(),
+      tagline: details.trim().split(/[.!?]/)[0].split(/\\s+/).slice(0, 12).join(" "),
+      description: details.trim(),
+      category: "Other",
+      tags: ["Creator-provided", "Independent project", parsed.hostname.replace(/^www\\./, "")],
+      pricing_type: "Contact",
+    });
+
     setLoading(true);
     try {
       const response = await fetch("/api/gemini", {
@@ -28,14 +38,16 @@ export const CreatorOnboardingPage: React.FC = () => {
         })
       });
       const data = await response.json();
-      if (!response.ok || !data.text) throw new Error(data.error || "AI drafting is unavailable. Check the server Gemini configuration.");
+      if (!response.ok || !data.text) throw new Error(data.error || "AI drafting is unavailable.");
       const raw = String(data.text).replace(/^\u0060\u0060\u0060(?:json)?/i, "").replace(/\u0060\u0060\u0060$/,"").trim();
       const result = JSON.parse(raw) as Draft;
-      if (!result.name || !result.tagline || !result.description) throw new Error("The AI response was incomplete. Please try again.");
+      if (!result.name || !result.tagline || !result.description) throw new Error("The AI response was incomplete.");
       setDraft(result);
-      setNote("Draft generated from the information you supplied. Verify every field against the live project before submitting.");
-    } catch (e) { setError(e instanceof Error ? e.message : "Could not create the listing draft."); }
-    finally { setLoading(false); }
+      setNote("AI-assisted draft generated from the information you supplied. Verify every field against the live project before submitting.");
+    } catch {
+      setDraft(makeFallbackDraft());
+      setNote("AI drafting is not configured or unavailable, so a basic editable draft was created from your supplied details. Verify every field against the live project before submitting.");
+    } finally { setLoading(false); }
   };
 
   return <div className="max-w-4xl mx-auto space-y-6">
