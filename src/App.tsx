@@ -21,6 +21,7 @@ import { AIDiscoverPage } from './pages/AIDiscoverPage';
 import { AuthPage } from './pages/AuthPage';
 import { AuthCallbackPage } from './pages/AuthCallbackPage';
 import { CommunityPage } from './pages/CommunityPage';
+import { GrowthScoutPage } from './pages/GrowthScoutPage';
 
 export function App() {
   return (
@@ -65,6 +66,14 @@ export function App() {
                 } 
               />
               
+              <Route
+                path="/growth-scout"
+                element={
+                  <ProtectedRoute adminOnly>
+                    <Navigate to="/moderation" replace />
+                  </ProtectedRoute>
+                }
+              />
               <Route path="/ai-discover" element={<AIDiscoverPage />} />
               <Route path="/auth" element={<AuthPage />} />
               <Route path="/auth/callback" element={<AuthCallbackPage />} />

@@ -115,6 +115,40 @@ export const PlatformProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   }, []);
 
+  // Load the signed-in user's real bookmarks from Supabase.
+  // Bookmarks are protected by the user's own-row RLS policy.
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadUserBookmarks = async () => {
+      if (!user) {
+        setBookmarks([]);
+        return;
+      }
+      if (!isSupabaseConfigured || !supabase) return;
+
+      const client = supabase;
+      setBookmarks([]);
+      const { data, error } = await client
+        .from('bookmarks')
+        .select('creation_id')
+        .eq('user_id', user.id);
+
+      if (cancelled) return;
+      if (error) {
+        console.warn('Could not load account bookmarks:', error);
+        setBookmarks([]);
+        return;
+      }
+      setBookmarks((data || []).map((row) => row.creation_id));
+    };
+
+    void loadUserBookmarks();
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id]);
+
   const loadFromSupabase = async () => {
     if (!supabase) return;
     setLoading(true);

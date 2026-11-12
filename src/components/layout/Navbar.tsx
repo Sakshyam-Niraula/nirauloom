@@ -55,7 +55,7 @@ export const Navbar: React.FC = () => {
           <Logo variant="horizontal" theme="dark" size="md" />
 
           {/* Desktop Navigation Links */}
-          <nav className="hidden lg:flex items-center gap-1">
+          <nav className="hidden 2xl:flex items-center gap-0.5">
             {navLinks.map((link) => {
               const active = isActive(link.path);
               const Icon = link.icon;
@@ -63,7 +63,7 @@ export const Navbar: React.FC = () => {
                 <Link
                   key={link.path}
                   to={link.path}
-                  className={`px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-1.5 ${
+                  className={`px-2 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 flex items-center gap-1 ${
                     active
                       ? 'bg-forest-800/80 text-sand-100 shadow-sm border border-sand-200/20'
                       : link.highlight
@@ -80,9 +80,9 @@ export const Navbar: React.FC = () => {
         </div>
 
         {/* Center / Right: Quick Search + Submit + Profile */}
-        <div className="hidden md:flex items-center gap-3">
+        <div className="hidden md:flex items-center gap-2">
           {/* Quick Search Input */}
-          <form onSubmit={handleSearchSubmit} className="relative w-48 lg:w-64">
+          <form onSubmit={handleSearchSubmit} className="hidden lg:block relative w-40 2xl:w-48">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-sand-300/50" />
             <input
               type="text"
@@ -96,7 +96,7 @@ export const Navbar: React.FC = () => {
           {/* Submit Creation Button */}
           <Link
             to="/submit"
-            className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-forest-800 hover:bg-forest-700 text-sand-100 text-xs font-semibold border border-sand-200/30 transition-all hover:border-sand-200/60 hover:shadow-glow-forest"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-forest-800 hover:bg-forest-700 text-sand-100 text-xs font-semibold border border-sand-200/30 transition-all hover:border-sand-200/60 hover:shadow-glow-forest"
           >
             <PlusCircle className="w-3.5 h-3.5 text-sand-200" />
             <span>Submit Creation</span>
@@ -233,10 +233,10 @@ export const Navbar: React.FC = () => {
         </div>
 
         {/* Mobile Hamburger Toggle */}
-        <div className="flex md:hidden items-center gap-2">
+        <div className="flex 2xl:hidden items-center gap-2">
           <Link
             to="/submit"
-            className="p-2 rounded-lg bg-forest-800 text-sand-100 border border-sand-200/20"
+            className="hidden md:inline-flex p-2 rounded-lg bg-forest-800 text-sand-100 border border-sand-200/20"
           >
             <PlusCircle className="w-4 h-4" />
           </Link>
@@ -250,9 +250,9 @@ export const Navbar: React.FC = () => {
         </div>
       </div>
 
-      {/* Mobile Drawer Menu */}
+      {/* Responsive Navigation Drawer */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-sand-200/10 bg-forest-950 px-4 pt-3 pb-6 space-y-3">
+        <div className="2xl:hidden border-t border-sand-200/10 bg-forest-950 px-4 pt-3 pb-6 space-y-3">
           <form onSubmit={handleSearchSubmit} className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-sand-300/50" />
             <input

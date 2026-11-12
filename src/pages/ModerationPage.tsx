@@ -2,6 +2,12 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   ShieldCheck, 
+  LayoutDashboard,
+  TrendingUp,
+  Rocket,
+  Users,
+  Bookmark,
+  Bot,
   CheckCircle, 
   XCircle, 
   AlertTriangle, 
@@ -13,12 +19,17 @@ import {
 } from 'lucide-react';
 import { usePlatform } from '../context/PlatformContext';
 import { useAuth } from '../context/AuthContext';
+import { CreationCard } from '../components/creations/CreationCard';
+import { GrowthScoutPage } from './GrowthScoutPage';
+import { CreatorOnboardingPage } from './CreatorOnboardingPage';
+import { GrowthAnalystPage } from './GrowthAnalystPage';
 
 export const ModerationPage: React.FC = () => {
-  const { creations, reports, updateCreationStatus, deleteCreation } = usePlatform();
+  const { creations, reports, bookmarks, updateCreationStatus, deleteCreation } = usePlatform();
   const { user } = useAuth();
 
-  const [activeTab, setActiveTab] = useState<'pending' | 'reports' | 'all'>('pending');
+  const [activeTab, setActiveTab] = useState<'overview' | 'pending' | 'reports' | 'all' | 'agents' | 'bookmarks'>('overview');
+  const [selectedAgent, setSelectedAgent] = useState<'scout' | 'onboarding' | 'analyst'>('scout');
   const [rejectReasonModal, setRejectReasonModal] = useState<string | null>(null);
   const [rejectionInput, setRejectionInput] = useState('');
 
@@ -76,7 +87,18 @@ export const ModerationPage: React.FC = () => {
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-2 border-b border-sand-200/10 pb-2">
+      <div className="flex flex-wrap items-center gap-2 border-b border-sand-200/10 pb-2">
+        <button
+          onClick={() => setActiveTab('overview')}
+          className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
+            activeTab === 'overview'
+              ? 'bg-forest-800 text-sand-100 border border-sand-200/20'
+              : 'text-sand-300/70 hover:text-sand-100'
+          }`}
+        >
+          <LayoutDashboard className="w-4 h-4" />
+          <span>Overview</span>
+        </button>
         <button
           onClick={() => setActiveTab('pending')}
           className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
@@ -102,6 +124,30 @@ export const ModerationPage: React.FC = () => {
         </button>
 
         <button
+          onClick={() => setActiveTab('agents')}
+          className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
+            activeTab === 'agents'
+              ? 'bg-forest-800 text-sand-100 border border-sand-200/20'
+              : 'text-sand-300/70 hover:text-sand-100'
+          }`}
+        >
+          <Bot className="w-4 h-4 text-electric-300" />
+          <span>AI Agents</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('bookmarks')}
+          className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
+            activeTab === 'bookmarks'
+              ? 'bg-forest-800 text-sand-100 border border-sand-200/20'
+              : 'text-sand-300/70 hover:text-sand-100'
+          }`}
+        >
+          <Bookmark className="w-4 h-4" />
+          <span>Bookmarks ({bookmarks.length})</span>
+        </button>
+
+        <button
           onClick={() => setActiveTab('all')}
           className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
             activeTab === 'all'
@@ -113,6 +159,122 @@ export const ModerationPage: React.FC = () => {
           <span>All Submissions ({creations.length})</span>
         </button>
       </div>
+
+      {/* Admin overview */}
+      {activeTab === 'overview' && (
+        <div className="space-y-8">
+          <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
+            {[
+              { label: 'Total projects', value: creations.length, icon: Rocket },
+              { label: 'Pending review', value: pendingCreations.length, icon: Clock },
+              { label: 'Approved projects', value: approvedCreations.length, icon: CheckCircle },
+              { label: 'Saved bookmarks', value: bookmarks.length, icon: Bookmark },
+            ].map((stat) => {
+              const Icon = stat.icon;
+              return (
+                <div key={stat.label} className="rounded-2xl border border-sand-200/10 bg-forest-900/40 p-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-xs text-sand-300/65">{stat.label}</p>
+                    <Icon className="w-4 h-4 text-electric-300" />
+                  </div>
+                  <p className="text-2xl font-extrabold text-sand-100 mt-2">{stat.value}</p>
+                </div>
+              );
+            })}
+          </div>
+
+          <section className="space-y-3">
+            <div>
+              <h2 className="text-lg font-bold text-sand-100">Your AI workspace</h2>
+              <p className="text-xs text-sand-300/65 mt-1">Agents work on research and preparation. You stay in control of external actions.</p>
+            </div>
+            <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
+              <article className="rounded-2xl border border-electric-400/25 bg-forest-900/50 p-5 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] uppercase tracking-wider font-bold text-emerald-300">Available</span>
+                  <TrendingUp className="w-5 h-5 text-electric-300" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-sand-100">Growth Scout</h3>
+                  <p className="text-xs text-sand-300/70 mt-1">Find public project launches, assess fit, and prepare invitation drafts for your review.</p>
+                </div>
+                <button onClick={() => setActiveTab('agents')} className="text-xs font-semibold text-electric-300 hover:text-sand-100 underline underline-offset-4">
+                  Open agent
+                </button>
+              </article>
+
+              <article className="rounded-2xl border border-sand-200/10 bg-forest-900/30 p-5 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] uppercase tracking-wider font-bold text-emerald-300">Available</span>
+                  <Users className="w-5 h-5 text-sand-300/70" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-sand-100">Creator Onboarding</h3>
+                  <p className="text-xs text-sand-300/70 mt-1">Turn a public project URL into a suggested Nirauloom listing for your approval.</p>
+                </div>
+                <button onClick={() => { setSelectedAgent("onboarding"); setActiveTab("agents"); }} className="text-xs font-semibold text-electric-300 underline underline-offset-4">Open agent</button>
+              </article>
+
+              <article className="rounded-2xl border border-sand-200/10 bg-forest-900/30 p-5 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] uppercase tracking-wider font-bold text-emerald-300">Available</span>
+                  <TrendingUp className="w-5 h-5 text-sand-300/70" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-sand-100">Growth Analyst</h3>
+                  <p className="text-xs text-sand-300/70 mt-1">Explain visitor-to-signup conversion, popular pages, and where creators drop off.</p>
+                </div>
+                <button onClick={() => { setSelectedAgent("analyst"); setActiveTab("agents"); }} className="text-xs font-semibold text-electric-300 underline underline-offset-4">Open agent</button>
+              </article>
+            </div>
+          </section>
+
+          <section className="rounded-2xl border border-sand-200/10 bg-forest-900/30 p-5">
+            <h2 className="text-sm font-bold text-sand-100">Platform health at a glance</h2>
+            <div className="grid sm:grid-cols-3 gap-4 mt-4 text-xs">
+              <div><p className="text-sand-300/55">Rejected projects</p><p className="text-lg font-bold text-sand-100 mt-1">{rejectedCreations.length}</p></div>
+              <div><p className="text-sand-300/55">Open reports</p><p className="text-lg font-bold text-sand-100 mt-1">{reports.length}</p></div>
+              <div><p className="text-sand-300/55">Current bookmarks</p><p className="text-lg font-bold text-sand-100 mt-1">{bookmarks.length}</p></div>
+            </div>
+          </section>
+        </div>
+      )}
+
+      {/* AI Agent workspace */}
+      {activeTab === 'agents' && (
+  <div className="space-y-6">
+    <div className="flex flex-wrap gap-2 border-b border-sand-200/10 pb-3">
+      <button onClick={() => setSelectedAgent('scout')} className={selectedAgent === 'scout' ? 'rounded-xl px-4 py-2 text-xs font-semibold bg-forest-800 text-sand-100 border border-sand-200/20' : 'rounded-xl px-4 py-2 text-xs font-semibold text-sand-300/70 hover:text-sand-100'}>Growth Scout</button>
+      <button onClick={() => setSelectedAgent('onboarding')} className={selectedAgent === 'onboarding' ? 'rounded-xl px-4 py-2 text-xs font-semibold bg-forest-800 text-sand-100 border border-sand-200/20' : 'rounded-xl px-4 py-2 text-xs font-semibold text-sand-300/70 hover:text-sand-100'}>Creator Onboarding</button>
+      <button onClick={() => setSelectedAgent('analyst')} className={selectedAgent === 'analyst' ? 'rounded-xl px-4 py-2 text-xs font-semibold bg-forest-800 text-sand-100 border border-sand-200/20' : 'rounded-xl px-4 py-2 text-xs font-semibold text-sand-300/70 hover:text-sand-100'}>Growth Analyst</button>
+    </div>
+    {selectedAgent === 'scout' && <GrowthScoutPage />}
+    {selectedAgent === 'onboarding' && <CreatorOnboardingPage />}
+    {selectedAgent === 'analyst' && <GrowthAnalystPage />}
+  </div>
+)}
+
+      {/* Saved bookmarks */}
+      {activeTab === 'bookmarks' && (
+        <div className="space-y-4">
+          {creations.filter((creation) => bookmarks.includes(creation.id)).length === 0 ? (
+            <div className="py-16 text-center border border-dashed border-sand-200/20 rounded-2xl bg-forest-900/20">
+              <Bookmark className="w-9 h-9 text-sand-300/40 mx-auto mb-3" />
+              <p className="text-sm font-semibold text-sand-200">No bookmarks saved yet</p>
+              <p className="text-xs text-sand-300/60 mt-1">Projects you bookmark while exploring will appear here.</p>
+              <Link to="/explore" className="inline-flex mt-4 px-4 py-2 rounded-xl bg-forest-800 text-sand-100 text-xs font-semibold">
+                Explore projects
+              </Link>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+              {creations.filter((creation) => bookmarks.includes(creation.id)).map((creation) => (
+                <CreationCard key={creation.id} creation={creation} />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Pending Queue */}
       {activeTab === 'pending' && (
