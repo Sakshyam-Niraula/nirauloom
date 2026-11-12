@@ -79,7 +79,7 @@ export const OutreachAgentPage: React.FC = () => {
       if (!supabase) return;
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) return;
-      const response = await fetch("/api/gmail/status", { headers: { Authorization: `Bearer ${session.access_token}`, "X-Supabase-Anon-Key": import.meta.env.VITE_SUPABASE_ANON_KEY } });
+      const response = await fetch("/api/gmail/status", { headers: { Authorization: `Bearer ${session.access_token}`, "X-Supabase-Anon-Key": import.meta.env.VITE_SUPABASE_ANON_KEY || "" } });
       if (response.ok) setGmailStatus(await response.json());
     };
     loadStatus();
