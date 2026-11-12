@@ -1,6 +1,6 @@
 interface Env {
-  SUPABASE_URL?: string;
-  SUPABASE_ANON_KEY?: string;
+  VITE_SUPABASE_URL?: string;
+  VITE_SUPABASE_ANON_KEY?: string;
   SUPABASE_SERVICE_ROLE_KEY?: string;
   RESEND_API_KEY?: string;
   RESEND_FROM_EMAIL?: string;
@@ -17,16 +17,16 @@ const clean = (value: unknown, max: number) =>
 
 async function getAdminId(request: Request, env: Env): Promise<string | null> {
   const token = request.headers.get("Authorization")?.replace(/^Bearer\s+/i, "");
-  if (!token || !env.SUPABASE_URL || !env.SUPABASE_ANON_KEY || !env.SUPABASE_SERVICE_ROLE_KEY) return null;
+  if (!token || !env.VITE_SUPABASE_URL || !env.VITE_SUPABASE_ANON_KEY || !env.SUPABASE_SERVICE_ROLE_KEY) return null;
 
-  const authResponse = await fetch(`${env.SUPABASE_URL}/auth/v1/user`, {
-    headers: { apikey: env.SUPABASE_ANON_KEY, Authorization: `Bearer ${token}` },
+  const authResponse = await fetch(`${env.VITE_SUPABASE_URL}/auth/v1/user`, {
+    headers: { apikey: env.VITE_SUPABASE_ANON_KEY, Authorization: `Bearer ${token}` },
   });
   if (!authResponse.ok) return null;
   const user = await authResponse.json() as { id?: string };
   if (!user.id) return null;
 
-  const profileUrl = new URL(`${env.SUPABASE_URL}/rest/v1/profiles`);
+  const profileUrl = new URL(`${env.VITE_SUPABASE_URL}/rest/v1/profiles`);
   profileUrl.searchParams.set("select", "is_admin");
   profileUrl.searchParams.set("id", `eq.${user.id}`);
   const profileResponse = await fetch(profileUrl.toString(), {
@@ -44,7 +44,7 @@ export const onRequestPost = async ({ request, env }: { request: Request; env: E
   if (!env.RESEND_API_KEY || !env.RESEND_FROM_EMAIL) {
     return json({ error: "Email sending is not configured yet. Add the Resend API key and verified sender address to Cloudflare Pages secrets." }, 503);
   }
-  if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY || !env.SUPABASE_SERVICE_ROLE_KEY) {
+  if (!env.VITE_SUPABASE_URL || !env.VITE_SUPABASE_ANON_KEY || !env.SUPABASE_SERVICE_ROLE_KEY) {
     return json({ error: "Server authentication is not configured." }, 503);
   }
 
@@ -76,7 +76,7 @@ export const onRequestPost = async ({ request, env }: { request: Request; env: E
       "Content-Type": "application/json",
     };
     const logResponse = await fetch(
-      `${env.SUPABASE_URL}/rest/v1/growth_scout_outreach?on_conflict=admin_user_id,opportunity_id`,
+      `${env.VITE_SUPABASE_URL}/rest/v1/growth_scout_outreach?on_conflict=admin_user_id,opportunity_id`,
       {
         method: "POST",
         headers: { ...restHeaders, Prefer: "resolution=ignore-duplicates,return=representation" },
