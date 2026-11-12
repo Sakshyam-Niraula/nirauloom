@@ -37,7 +37,7 @@ async function fetchJson(url: string, headers: Record<string, string> = {}) {
 }
 
 async function verifyAdmin(request: Request, anonKey: string) {
-  const token = request.headers.get("Authorization")?.replace(/^Bearer\\s+/i, "");
+  const token = request.headers.get("Authorization")?.replace(/^Bearer\s+/i, "");
   if (!token) return false;
   const base = "https://jqggrvirneqygwzbrebl.supabase.co";
   const headers = { apikey: anonKey, Authorization: `Bearer ${token}` };
