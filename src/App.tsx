@@ -22,6 +22,7 @@ import { AuthPage } from './pages/AuthPage';
 import { AuthCallbackPage } from './pages/AuthCallbackPage';
 import { CommunityPage } from './pages/CommunityPage';
 import { GrowthScoutPage } from './pages/GrowthScoutPage';
+import { OutreachAgentPage } from './pages/OutreachAgentPage';
 
 export function App() {
   return (
@@ -74,6 +75,7 @@ export function App() {
                   </ProtectedRoute>
                 }
               />
+              <Route path="/outreach-agent" element={<ProtectedRoute adminOnly><OutreachAgentPage /></ProtectedRoute>} />
               <Route path="/ai-discover" element={<AIDiscoverPage />} />
               <Route path="/auth" element={<AuthPage />} />
               <Route path="/auth/callback" element={<AuthCallbackPage />} />
