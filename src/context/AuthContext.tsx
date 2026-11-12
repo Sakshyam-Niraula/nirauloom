@@ -134,6 +134,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         email,
         password: pass,
         options: {
+          // Keep confirmation on the same host that initiated registration.
+          // This is important for Cloudflare Pages preview deployments.
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
           data: {
             username,
             full_name: displayName,
