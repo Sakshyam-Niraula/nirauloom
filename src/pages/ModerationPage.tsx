@@ -217,7 +217,7 @@ export const ModerationPage: React.FC = () => {
 
               <article className="rounded-2xl border border-sand-200/10 bg-forest-900/30 p-5 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] uppercase tracking-wider font-bold text-amber-300">Planned</span>
+                  <span className="text-[10px] uppercase tracking-wider font-bold text-emerald-300">Available</span>
                   <TrendingUp className="w-5 h-5 text-sand-300/70" />
                 </div>
                 <div>
