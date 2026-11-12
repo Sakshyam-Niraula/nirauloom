@@ -13,20 +13,20 @@ export const GrowthAnalystPage: React.FC = () => {
     if(!supabase){setError("Supabase is not configured.");return;}
     setLoading(true);setError("");setInsights([]);
     try{
-      const [users,projects,approved,pending,bookmarks,appreciations]=await Promise.all([
+      const [users,projects,approved,pending]=await Promise.all([
         supabase.from("profiles").select("id",{count:"exact",head:true}),
         supabase.from("creations").select("views_count,appreciations_count,bookmarks_count,status,created_at"),
         supabase.from("creations").select("id",{count:"exact",head:true}).eq("status","approved"),
-        supabase.from("creations").select("id",{count:"exact",head:true}).eq("status","pending"),
-        supabase.from("bookmarks").select("id",{count:"exact",head:true}),
-        supabase.from("appreciations").select("id",{count:"exact",head:true})
+        supabase.from("creations").select("id",{count:"exact",head:true}).eq("status","pending")
       ]);
-      const failure=[users,projects,approved,pending,bookmarks,appreciations].find(r=>r.error);
+      const failure=[users,projects,approved,pending].find(r=>r.error);
       if(failure?.error) throw new Error(failure.error.message);
       const rows=projects.data||[];
       const totalViews=rows.reduce((n,r)=>n+Number(r.views_count||0),0);
       const totalAppreciations=rows.reduce((n,r)=>n+Number(r.appreciations_count||0),0);
-      const result={users:users.count||0,projects:rows.length,approved:approved.count||0,pending:pending.count||0,views:totalViews,appreciations:totalAppreciations,bookmarks:bookmarks.count||0,updatedAt:new Date().toISOString()};
+      // Use aggregate counters on creations: bookmark rows are private to each user under RLS.
+      const totalBookmarks=rows.reduce((n,r)=>n+Number(r.bookmarks_count||0),0);
+      const result={users:users.count||0,projects:rows.length,approved:approved.count||0,pending:pending.count||0,views:totalViews,appreciations:totalAppreciations,bookmarks:totalBookmarks,updatedAt:new Date().toISOString()};
       setMetrics(result);
       const tips:string[]=[];
       if(result.users>0 && result.projects===0) tips.push("Accounts are registering but no projects are listed yet. Improve the first-project onboarding and invite early creators.");
