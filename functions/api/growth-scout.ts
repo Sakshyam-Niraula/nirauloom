@@ -114,7 +114,8 @@ async function collectOpportunities(): Promise<Opportunity[]> {
   for (const result of results) {
     if (result.status !== "fulfilled") continue;
     for (const item of result.value) {
-      const key = item.url.toLowerCase().replace(/\\/$/, "");
+      const normalizedUrl = item.url.toLowerCase();
+      const key = normalizedUrl.endsWith("/") ? normalizedUrl.slice(0, -1) : normalizedUrl;
       if (!unique.has(key)) unique.set(key, item);
     }
   }
