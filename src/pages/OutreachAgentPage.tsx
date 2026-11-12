@@ -20,6 +20,11 @@ type Lead = {
   fitScore: number;
   why: string;
   draft: string;
+  subject: string;
+  recipientEmail: string;
+  contactSource: string;
+  publicContactConfirmed: boolean;
+  status?: string;
 };
 
 const DEFAULTS: Settings = {
@@ -45,6 +50,7 @@ export const OutreachAgentPage: React.FC = () => {
   const [lastRun, setLastRun] = useState("");
   const [gmailStatus, setGmailStatus] = useState<{ connected: boolean; email?: string | null; configured?: boolean }>({ connected: false, configured: false });
   const [connectingGmail, setConnectingGmail] = useState(false);
+  const [sendingId, setSendingId] = useState<string | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -139,13 +145,54 @@ export const OutreachAgentPage: React.FC = () => {
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Research could not be completed.");
       const candidates = (result.opportunities || []).filter((item: Lead) => Number(item.fitScore) >= settings.minimum_fit_score);
-      setLeads(candidates);
+      setLeads(candidates.map((lead: Lead) => ({ ...lead, subject: `A project discovery opportunity for ${lead.title.slice(0, 65)}`, recipientEmail: "", contactSource: "", publicContactConfirmed: false })));
       setLastRun(new Date().toLocaleString());
       setNotice(`Research complete. ${candidates.length} candidate(s) met your minimum fit score. No emails were sent.`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Research failed.");
     } finally {
       setRunning(false);
+    }
+  };
+
+
+  const updateLead = (id: string, patch: Partial<Lead>) =>
+    setLeads(current => current.map(lead => lead.id === id ? { ...lead, ...patch } : lead));
+
+  const sendLead = async (lead: Lead) => {
+    if (!supabase) return;
+    setError(""); setNotice("");
+    if (!lead.recipientEmail.trim() || !lead.contactSource.trim() || !lead.publicContactConfirmed) {
+      setError("Add a publicly listed project-contact email, its source URL, and confirm it is published for project enquiries.");
+      return;
+    }
+    setSendingId(lead.id);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) throw new Error("Please sign in again.");
+      const response = await fetch("/api/send-invitation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({
+          opportunityId: lead.id,
+          recipientEmail: lead.recipientEmail,
+          subject: lead.subject,
+          message: lead.draft,
+          sourceUrl: lead.url,
+          sourceTitle: lead.title,
+          contactSourceUrl: lead.contactSource,
+          publicContactConfirmed: lead.publicContactConfirmed
+        })
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Email could not be sent.");
+      updateLead(lead.id, { status: "Sent" });
+      setNotice(`Email sent to ${lead.recipientEmail} through hello.nirauloom@gmail.com.`);
+    } catch (e) {
+      updateLead(lead.id, { status: "Failed" });
+      setError(e instanceof Error ? e.message : "Email could not be sent.");
+    } finally {
+      setSendingId(null);
     }
   };
 
@@ -191,11 +238,17 @@ export const OutreachAgentPage: React.FC = () => {
         {lastRun && <p className="text-[11px] text-sand-300/45">Last run: {lastRun}</p>}
         {error && <p className="rounded-xl border border-rose-400/20 bg-rose-500/10 p-3 text-sm text-rose-200">{error}</p>}
         {notice && <p className="rounded-xl border border-emerald-400/20 bg-emerald-500/10 p-3 text-sm text-emerald-200">{notice}</p>}
-        {leads.map(lead => <article key={lead.id} className="rounded-xl border border-sand-200/10 bg-forest-950/60 p-4 space-y-2">
+        {leads.map(lead => <article key={lead.id} className="rounded-xl border border-sand-200/10 bg-forest-950/60 p-4 space-y-3">
           <div className="flex items-start justify-between gap-3"><div><p className="text-[10px] uppercase tracking-wider text-sand-300/50">{lead.source} · {lead.author}</p><h3 className="font-semibold text-sand-100 mt-1">{lead.title}</h3></div><span className="rounded-lg bg-forest-800 px-2 py-1 text-xs font-bold text-emerald-300">{lead.fitScore}/100</span></div>
-          <p className="text-xs text-sand-300/70">{lead.why}</p><a className="text-xs text-electric-300 underline" href={lead.url} target="_blank" rel="noreferrer">Open source</a>
-          <details className="pt-2"><summary className="cursor-pointer text-xs font-semibold text-sand-200">View generated draft</summary><p className="mt-3 whitespace-pre-wrap text-sm text-sand-200/80">{lead.draft}</p></details>
-          <p className="text-[11px] text-amber-200/80">No verified public contact email was supplied by this feed. This candidate cannot be emailed automatically.</p>
+          <p className="text-xs text-sand-300/70">{lead.why}</p><a className="text-xs text-electric-300 underline" href={lead.url} target="_blank" rel="noreferrer">Open project/source</a>
+          <div className="grid sm:grid-cols-2 gap-3">
+            <label className="text-xs text-sand-200">Public project-contact email<input className={inputClass+" mt-1"} type="email" placeholder="creator@example.com" value={lead.recipientEmail} onChange={e=>updateLead(lead.id,{recipientEmail:e.target.value})}/></label>
+            <label className="text-xs text-sand-200">URL where email is publicly listed<input className={inputClass+" mt-1"} type="url" placeholder="https://project.com/contact" value={lead.contactSource} onChange={e=>updateLead(lead.id,{contactSource:e.target.value})}/></label>
+          </div>
+          <label className="block text-xs text-sand-200">Email subject<input className={inputClass+" mt-1"} value={lead.subject} onChange={e=>updateLead(lead.id,{subject:e.target.value})}/></label>
+          <label className="block text-xs text-sand-200">Personalized email<textarea className={inputClass+" mt-1"} rows={5} value={lead.draft} onChange={e=>updateLead(lead.id,{draft:e.target.value})}/></label>
+          <label className="flex items-start gap-2 text-xs text-sand-300"><input type="checkbox" className="mt-0.5" checked={lead.publicContactConfirmed} onChange={e=>updateLead(lead.id,{publicContactConfirmed:e.target.checked})}/>I checked the linked contact page and confirm this address is explicitly published for project or business enquiries.</label>
+          <div className="flex items-center justify-between gap-3"><span className="text-xs text-sand-300">{lead.status || "Draft — not sent"}</span><button onClick={()=>sendLead(lead)} disabled={sendingId===lead.id || Boolean(lead.status==="Sent")} className="rounded-xl bg-electric-600 hover:bg-electric-500 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50">{sendingId===lead.id?"Sending…":lead.status==="Sent"?"Sent":"Approve & Send"}</button></div>
         </article>)}
         {!leads.length && !running && <div className="rounded-xl border border-dashed border-sand-200/15 p-8 text-center"><Sparkles className="w-8 h-8 text-sand-300/35 mx-auto mb-2" /><p className="text-sm text-sand-300/60">Run research to see matching creators and draft examples here.</p></div>}
       </section>
