@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Logo } from '../brand/Logo';
-import { Globe, Heart, Shield, Sparkles } from 'lucide-react';
+import { Globe, Heart, Shield, Sparkles, Mail } from 'lucide-react';
 import { isSupabaseConfigured } from '../../lib/supabase';
 import { isGeminiConfigured } from '../../lib/gemini';
 
@@ -14,7 +14,7 @@ export const Footer: React.FC = () => {
           <div className="lg:col-span-2 space-y-4">
             <Logo variant="horizontal" theme="dark" size="md" />
             <p className="text-sm text-sand-300/70 max-w-sm leading-relaxed">
-              Discover the Internet, One Creation at a Time. NIRAULOOM is a modern digital creation discovery platform 
+              Discover the Internet, One Creation at a Time. NIRAULOOM is a modern digital creation discovery platform
               uniting web experiences, independent software, and creative tools from makers worldwide.
             </p>
             <div className="flex items-center gap-3 pt-2 text-xs text-sand-300/60">
@@ -53,7 +53,7 @@ export const Footer: React.FC = () => {
             </ul>
           </div>
 
-          {/* Platform Standards */}
+          {/* Platform Standards and Contact */}
           <div className="space-y-3">
             <h4 className="text-xs font-bold uppercase tracking-wider text-sand-100 font-sans">Integrity & Safe Discovery</h4>
             <p className="text-xs text-sand-300/60 leading-relaxed">
@@ -62,6 +62,16 @@ export const Footer: React.FC = () => {
             <div className="flex items-center gap-2 pt-1 text-xs text-sand-300/50">
               <Shield className="w-3.5 h-3.5 text-sand-200" />
               <span>Row Level Security Enforced</span>
+            </div>
+            <div className="pt-4 space-y-2">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-sand-100 font-sans">Contact</h4>
+              <a
+                href="mailto:hello.nirauloom@gmail.com"
+                className="inline-flex items-center gap-2 text-xs text-sand-300/70 hover:text-sand-100 transition-colors"
+              >
+                <Mail className="w-3.5 h-3.5" />
+                hello.nirauloom@gmail.com
+              </a>
             </div>
           </div>
         </div>
