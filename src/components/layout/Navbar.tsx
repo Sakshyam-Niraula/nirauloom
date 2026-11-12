@@ -11,7 +11,8 @@ import {
   Menu, 
   X, 
   FolderPlus,
-  LayoutGrid
+  LayoutGrid,
+  Mail
 } from 'lucide-react';
 import { Logo } from '../brand/Logo';
 import { useAuth } from '../../context/AuthContext';
@@ -178,6 +179,9 @@ export const Navbar: React.FC = () => {
                       >
                         <ShieldCheck className="w-4 h-4 text-electric-400" />
                         Admin Moderation Panel
+                      </Link>
+                      <Link to="/outreach-agent" onClick={() => setProfileDropdownOpen(false)} className="flex items-center gap-2.5 px-4 py-2 text-xs text-electric-300 font-semibold hover:bg-forest-800">
+                        <Mail className="w-4 h-4" /> Autonomous Outreach Agent
                       </Link>
                     )}
                   </div>
