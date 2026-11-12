@@ -122,7 +122,7 @@ export const onRequestPost = async ({ request, env }: { request: Request; env: E
       }
       providerId = emailData.id;
     } catch (error) {
-      await fetch(`${env.SUPABASE_URL}/rest/v1/growth_scout_outreach?id=eq.${inserted[0].id}`, {
+      await fetch(`${env.VITE_SUPABASE_URL}/rest/v1/growth_scout_outreach?id=eq.${inserted[0].id}`, {
         method: "PATCH",
         headers: { ...restHeaders, Prefer: "return=minimal" },
         body: JSON.stringify({ status: "failed", error_message: error instanceof Error ? error.message.slice(0, 300) : "Email provider error" }),
@@ -130,7 +130,7 @@ export const onRequestPost = async ({ request, env }: { request: Request; env: E
       return json({ error: error instanceof Error ? error.message : "Email delivery failed." }, 502);
     }
 
-    await fetch(`${env.SUPABASE_URL}/rest/v1/growth_scout_outreach?id=eq.${inserted[0].id}`, {
+    await fetch(`${env.VITE_SUPABASE_URL}/rest/v1/growth_scout_outreach?id=eq.${inserted[0].id}`, {
       method: "PATCH",
       headers: { ...restHeaders, Prefer: "return=minimal" },
       body: JSON.stringify({ status: "sent", provider_message_id: providerId, sent_at: new Date().toISOString() }),
