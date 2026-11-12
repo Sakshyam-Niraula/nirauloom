@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   Mail, 
   Lock, 
@@ -17,6 +17,9 @@ import { isSupabaseConfigured } from '../lib/supabase';
 export const AuthPage: React.FC = () => {
   const { signInWithPassword, signUp, signInWithOAuth, resetPassword } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const requestedRedirect = new URLSearchParams(location.search).get('redirect');
+  const safeRedirect = requestedRedirect && requestedRedirect.startsWith('/') && !requestedRedirect.startsWith('//') ? requestedRedirect : null;
 
   const [mode, setMode] = useState<'signin' | 'signup' | 'forgot'>('signin');
   const [email, setEmail] = useState('');
@@ -41,7 +44,7 @@ export const AuthPage: React.FC = () => {
         if (res.error) {
           setErrorMsg(res.error);
         } else {
-          navigate('/dashboard');
+          navigate(safeRedirect || '/dashboard', { replace: true });
         }
       } else if (mode === 'signup') {
         const res = await signUp(email, password, username, displayName);
@@ -49,7 +52,7 @@ export const AuthPage: React.FC = () => {
           setErrorMsg(res.error);
         } else {
           setSuccessMsg(res.message || 'Account created successfully!');
-          setTimeout(() => navigate('/dashboard'), 1500);
+          setTimeout(() => navigate('/dashboard', { replace: true }), 1500);
         }
       } else if (mode === 'forgot') {
         const res = await resetPassword(email);
