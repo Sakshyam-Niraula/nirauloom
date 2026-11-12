@@ -97,7 +97,7 @@ export const OutreachAgentPage: React.FC = () => {
     }
   };
 
-  const update = <K extends keyof Settings>(key: K, value: Settings[K]) =>
+  const update = <K extends keyof Settings,>(key: K, value: Settings[K]) =>
     setSettings(current => ({ ...current, [key]: value }));
 
   return (
