@@ -1,20 +1,23 @@
 import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 export const AuthCallbackPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     if (supabase) {
       supabase.auth.getSession().then(() => {
-        navigate('/dashboard', { replace: true });
+        const requested = new URLSearchParams(location.search).get('redirect');
+        const safe = requested && requested.startsWith('/') && !requested.startsWith('//') ? requested : '/dashboard';
+        navigate(safe, { replace: true });
       });
     } else {
       navigate('/', { replace: true });
     }
-  }, [navigate]);
+  }, [navigate, location.search]);
 
   return (
     <div className="min-h-[70vh] flex flex-col items-center justify-center p-4 space-y-3">
