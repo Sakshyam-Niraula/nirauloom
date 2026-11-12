@@ -172,17 +172,23 @@ export const Navbar: React.FC = () => {
                     </Link>
 
                     {user.is_admin && (
-                      <Link
-                        to="/moderation"
-                        onClick={() => setProfileDropdownOpen(false)}
-                        className="flex items-center gap-2.5 px-4 py-2 text-xs text-electric-400 font-semibold hover:bg-forest-800"
-                      >
-                        <ShieldCheck className="w-4 h-4 text-electric-400" />
-                        Admin Moderation Panel
-                      </Link>
-                      <Link to="/outreach-agent" onClick={() => setProfileDropdownOpen(false)} className="flex items-center gap-2.5 px-4 py-2 text-xs text-electric-300 font-semibold hover:bg-forest-800">
-                        <Mail className="w-4 h-4" /> Autonomous Outreach Agent
-                      </Link>
+                      <>
+                        <Link
+                          to="/moderation"
+                          onClick={() => setProfileDropdownOpen(false)}
+                          className="flex items-center gap-2.5 px-4 py-2 text-xs text-electric-400 font-semibold hover:bg-forest-800"
+                        >
+                          <ShieldCheck className="w-4 h-4 text-electric-400" />
+                          Admin Moderation Panel
+                        </Link>
+                        <Link
+                          to="/outreach-agent"
+                          onClick={() => setProfileDropdownOpen(false)}
+                          className="flex items-center gap-2.5 px-4 py-2 text-xs text-electric-300 font-semibold hover:bg-forest-800"
+                        >
+                          <Mail className="w-4 h-4" /> Autonomous Outreach Agent
+                        </Link>
+                      </>
                     )}
                   </div>
 
