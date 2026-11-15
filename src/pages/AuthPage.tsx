@@ -15,13 +15,14 @@ import { useAuth } from '../context/AuthContext';
 import { isSupabaseConfigured } from '../lib/supabase';
 
 export const AuthPage: React.FC = () => {
-  const { signInWithPassword, signUp, signInWithOAuth, resetPassword } = useAuth();
+  const { signInWithPassword, signUp, signInWithOAuth, resetPassword, isLiveSupabase } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const requestedRedirect = new URLSearchParams(location.search).get('redirect');
   const safeRedirect = requestedRedirect && requestedRedirect.startsWith('/') && !requestedRedirect.startsWith('//') ? requestedRedirect : null;
 
-  const [mode, setMode] = useState<'signin' | 'signup' | 'forgot'>('signin');
+  const initialMode = new URLSearchParams(location.search).get('mode') === 'signup' ? 'signup' : 'signin';
+  const [mode, setMode] = useState<'signin' | 'signup' | 'forgot'>(initialMode);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
@@ -52,7 +53,9 @@ export const AuthPage: React.FC = () => {
           setErrorMsg(res.error);
         } else {
           setSuccessMsg(res.message || 'Account created successfully!');
-          setTimeout(() => navigate('/dashboard', { replace: true }), 1500);
+          if (!isLiveSupabase) {
+            setTimeout(() => navigate('/dashboard', { replace: true }), 1200);
+          }
         }
       } else if (mode === 'forgot') {
         const res = await resetPassword(email);
