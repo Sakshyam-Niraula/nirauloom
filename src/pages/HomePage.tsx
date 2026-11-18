@@ -47,7 +47,7 @@ export const HomePage: React.FC = () => {
         <div className="loom-orbit loom-orbit-one" aria-hidden="true" />
         <div className="loom-orbit loom-orbit-two" aria-hidden="true" />
         <div className="loom-hero-inner">
-          <div className="loom-kicker"><span className="loom-kicker-mark"><WovenNIcon size={22} /></span><span>THE INDEPENDENT INTERNET, IN ONE PLACE</span><span className="loom-kicker-dot" /></div>
+          <div className="loom-kicker"><span className="loom-kicker-mark"><WovenNIcon size={22} theme="light" /></span><span>THE INDEPENDENT INTERNET, IN ONE PLACE</span><span className="loom-kicker-dot" /></div>
           <div className="loom-hero-copy">
             <p className="loom-eyebrow">A living directory of things made with intention</p>
             <h1>Good ideas<br /><em>find their people.</em></h1>
@@ -62,6 +62,12 @@ export const HomePage: React.FC = () => {
               <Link to={publishPath} onClick={signupClick} className="loom-button loom-button-primary">{user ? 'Publish a creation' : 'Put your work out there'}<ArrowUpRight size={17} /></Link>
               <Link to="/creators" className="loom-button loom-button-quiet">Meet the makers<ArrowRight size={16} /></Link>
             </div>
+            <div className="loom-pathway">
+              <div className="loom-pathway-heading">A SMALL MAP FOR BIG CURIOSITY</div>
+              <div className="loom-pathway-step"><span>01</span><b>Discover</b><small>Find fresh ideas</small></div>
+              <div className="loom-pathway-step"><span>02</span><b>Connect</b><small>Meet the makers</small></div>
+              <div className="loom-pathway-step"><span>03</span><b>Share</b><small>Show what you build</small></div>
+            </div>
           </div>
           <div className="loom-hero-art" aria-label="Abstract woven discovery motif">
             <div className="loom-art-caption"><span>FIG. 01</span><span>THE DISCOVERY FIELD</span></div>
@@ -70,7 +76,7 @@ export const HomePage: React.FC = () => {
               <div className="loom-thread loom-thread-b" />
               <div className="loom-thread loom-thread-c" />
               <div className="loom-thread loom-thread-d" />
-              <div className="loom-art-core"><WovenNIcon size={76} /></div>
+              <div className="loom-art-core"><WovenNIcon size={76} theme="light" /></div>
               <div className="loom-art-node loom-node-a"><Sparkles size={17} /></div>
               <div className="loom-art-node loom-node-b"><Layers3 size={17} /></div>
               <div className="loom-art-node loom-node-c"><Globe2 size={17} /></div>
@@ -114,7 +120,7 @@ export const HomePage: React.FC = () => {
         </div>
         {loading ? <div className="loom-loading-grid">{[1, 2, 3, 4].map((n) => <div className="loom-skeleton" key={n}><div /><span /><span /></div>)}</div>
           : recent.length ? <div className="loom-project-grid">{recent.map((creation) => <CreationCard key={creation.id} creation={creation} />)}</div>
-          : <div className="loom-empty"><WovenNIcon size={44} /><div><h3>The first threads are waiting.</h3><p>Be among the makers who shape what this place becomes.</p></div><Link to={publishPath} onClick={signupClick} className="loom-button loom-button-primary">Share your first creation<ArrowUpRight size={16} /></Link></div>}
+          : <div className="loom-empty"><WovenNIcon size={44} theme="light" /><div><h3>The first threads are waiting.</h3><p>Be among the makers who shape what this place becomes.</p></div><Link to={publishPath} onClick={signupClick} className="loom-button loom-button-primary">Share your first creation<ArrowUpRight size={16} /></Link></div>}
       </section>
 
       {appreciated.length > 1 && (
@@ -127,7 +133,7 @@ export const HomePage: React.FC = () => {
       <section className="loom-maker-section">
         <div className="loom-maker-pattern" aria-hidden="true" />
         <div className="loom-maker-copy"><p className="loom-eyebrow">FOR THE PEOPLE WHO MAKE THINGS</p><h2>Your work deserves<br /><em>to travel further.</em></h2><p>Give your project a place to live beyond a launch post. Build your creator profile, share what you made, and let curious people find their way to it.</p><div className="loom-maker-actions"><Link to={publishPath} onClick={signupClick} className="loom-button loom-button-light">{user ? 'Publish your creation' : 'Create your free profile'}<ArrowUpRight size={17} /></Link><Link to="/community" className="loom-maker-secondary">Discover the community <ArrowRight size={16} /></Link></div></div>
-        <div className="loom-maker-side"><div className="loom-maker-symbol"><WovenNIcon size={94} /></div><span>BUILT INDEPENDENTLY.<br />FOUND TOGETHER.</span><span className="loom-maker-number">N° 001 — ONGOING</span></div>
+        <div className="loom-maker-side"><div className="loom-maker-symbol"><WovenNIcon size={94} theme="light" /></div><span>BUILT INDEPENDENTLY.<br />FOUND TOGETHER.</span><span className="loom-maker-number">N° 001 — ONGOING</span></div>
       </section>
 
       <footer className="loom-last-note"><span>AN OPEN INVITATION TO CURIOSITY</span><Link to="/explore">Wander a little <ArrowUpRight size={16} /></Link></footer>
