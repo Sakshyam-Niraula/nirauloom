@@ -23,6 +23,7 @@ import { AuthCallbackPage } from './pages/AuthCallbackPage';
 import { CommunityPage } from './pages/CommunityPage';
 import { GrowthScoutPage } from './pages/GrowthScoutPage';
 import { OutreachAgentPage } from './pages/OutreachAgentPage';
+import { ConversionAnalyticsPage } from './pages/ConversionAnalyticsPage';
 
 export function App() {
   return (
@@ -76,6 +77,7 @@ export function App() {
                 }
               />
               <Route path="/outreach-agent" element={<ProtectedRoute adminOnly><OutreachAgentPage /></ProtectedRoute>} />
+              <Route path="/moderation/conversion-analytics" element={<ProtectedRoute adminOnly><ConversionAnalyticsPage /></ProtectedRoute>} />
               <Route path="/ai-discover" element={<AIDiscoverPage />} />
               <Route path="/auth" element={<AuthPage />} />
               <Route path="/auth/callback" element={<AuthCallbackPage />} />

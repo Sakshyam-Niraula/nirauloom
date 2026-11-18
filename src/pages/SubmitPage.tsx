@@ -16,6 +16,7 @@ import { usePlatform } from '../context/PlatformContext';
 import { useAuth } from '../context/AuthContext';
 import { analyzeWebsiteWithAI } from '../lib/gemini';
 import { PricingType } from '../types';
+import { trackConversion } from '../lib/analytics';
 
 export const SubmitPage: React.FC = () => {
   const { categories, subcategories, submitCreation } = usePlatform();
@@ -155,6 +156,7 @@ export const SubmitPage: React.FC = () => {
     setSubmitting(false);
 
     if (res.success && res.id) {
+      trackConversion('project_submission_succeeded');
       setSuccessSubmission({
         id: res.id,
         status: user.is_admin ? 'approved' : 'pending',
@@ -166,17 +168,31 @@ export const SubmitPage: React.FC = () => {
 
   if (!user) {
     return (
-      <div className="max-w-xl mx-auto py-24 px-4 text-center space-y-4">
-        <h2 className="text-2xl font-bold text-sand-100">Sign in to Submit a Creation</h2>
-        <p className="text-xs text-sand-300/70">
-          NIRAULOOM requires an authenticated creator profile to submit and manage web creations.
-        </p>
-        <Link
-          to="/auth"
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-forest-800 text-sand-100 text-xs font-semibold border border-sand-200/30"
-        >
-          Sign In or Create Account
-        </Link>
+      <div className="max-w-3xl mx-auto py-16 px-4 space-y-8">
+        <div className="text-center">
+          <p className="text-xs font-bold uppercase tracking-wider text-electric-300">Creator submission</p>
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-sand-100 mt-3">Put your project where people can discover it.</h1>
+          <p className="text-sm text-sand-300/75 max-w-2xl mx-auto mt-3">NIRAULOOM is free to list on. You can see exactly what is needed before creating an account.</p>
+        </div>
+        <div className="grid sm:grid-cols-2 gap-4">
+          <div className="rounded-2xl border border-sand-200/15 bg-forest-900/40 p-5">
+            <h2 className="font-bold text-sand-100">What you'll need</h2>
+            <ul className="text-sm text-sand-300/75 mt-3 space-y-2 list-disc pl-5">
+              <li>Project or product name</li><li>Public website or demo URL</li><li>Short description and category</li><li>Optional logo, screenshots, and tags</li>
+            </ul>
+          </div>
+          <div className="rounded-2xl border border-sand-200/15 bg-forest-900/40 p-5">
+            <h2 className="font-bold text-sand-100">What happens next</h2>
+            <ol className="text-sm text-sand-300/75 mt-3 space-y-2 list-decimal pl-5">
+              <li>Create your free creator account.</li><li>Complete the project form (AI assistance is optional).</li><li>Our team reviews the listing.</li><li>Approved projects appear in Explore and on your profile.</li>
+            </ol>
+          </div>
+        </div>
+        <div className="rounded-2xl bg-forest-900/60 border border-electric-500/25 p-6 text-center">
+          <p className="text-sm text-sand-200">No payment or paid promotion is required. You retain ownership of your project.</p>
+          <Link to="/auth?mode=signup" className="inline-flex items-center justify-center gap-2 mt-5 px-6 py-3 rounded-xl bg-electric-600 hover:bg-electric-500 text-white text-sm font-bold transition-colors">Create your free account <ExternalLink className="w-4 h-4" /></Link>
+          <p className="text-xs text-sand-300/55 mt-3">Already have an account? <Link to="/auth" className="text-electric-300 hover:text-electric-200">Sign in</Link>.</p>
+        </div>
       </div>
     );
   }

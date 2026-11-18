@@ -13,6 +13,7 @@ import { Logo } from '../components/brand/Logo';
 import { GithubIcon } from '../components/brand/SocialIcons';
 import { useAuth } from '../context/AuthContext';
 import { isSupabaseConfigured } from '../lib/supabase';
+import { trackConversion } from '../lib/analytics';
 
 export const AuthPage: React.FC = () => {
   const { signInWithPassword, signUp, signInWithOAuth, resetPassword, isLiveSupabase } = useAuth();
@@ -48,10 +49,12 @@ export const AuthPage: React.FC = () => {
           navigate(safeRedirect || '/dashboard', { replace: true });
         }
       } else if (mode === 'signup') {
+        trackConversion('signup_form_submitted');
         const res = await signUp(email, password, username, displayName);
         if (res.error) {
           setErrorMsg(res.error);
         } else {
+          trackConversion('signup_email_sent');
           setSuccessMsg(res.message || 'Account created successfully!');
           if (!isLiveSupabase) {
             setTimeout(() => navigate('/dashboard', { replace: true }), 1200);
