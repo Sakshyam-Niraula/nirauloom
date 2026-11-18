@@ -144,7 +144,7 @@ export const CreatorProfilePage: React.FC = () => {
   const totalAppreciations = creatorCreations.reduce((acc, c) => acc + c.appreciations_count, 0);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
+    <div className="creator-profile-page max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
       {/* Profile Header Glass Banner */}
       <div className="rounded-3xl bg-forest-900/50 border border-sand-200/20 p-6 sm:p-8 backdrop-blur-xl shadow-glass flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
