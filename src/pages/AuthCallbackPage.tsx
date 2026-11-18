@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { trackConversion } from '../lib/analytics';
 
 export const AuthCallbackPage: React.FC = () => {
   const navigate = useNavigate();
@@ -9,7 +10,8 @@ export const AuthCallbackPage: React.FC = () => {
 
   useEffect(() => {
     if (supabase) {
-      supabase.auth.getSession().then(() => {
+      supabase.auth.getSession().then(({ data }) => {
+        if (data.session?.user) trackConversion('auth_completed');
         const requested = new URLSearchParams(location.search).get('redirect');
         const safe = requested && requested.startsWith('/') && !requested.startsWith('//') ? requested : '/dashboard';
         navigate(safe, { replace: true });
