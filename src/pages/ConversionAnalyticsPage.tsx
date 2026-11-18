@@ -23,9 +23,11 @@ export const ConversionAnalyticsPage: React.FC = () => {
         setLoading(false);
         return;
       }
+      const db = supabase;
+      if (!db) return;
       const since = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
       const results = await Promise.all(EVENTS.map(async ([event]) => {
-        const result = await supabase.from('conversion_events')
+        const result = await db.from('conversion_events')
           .select('id', { count: 'exact', head: true })
           .eq('event_name', event)
           .gte('created_at', since);
