@@ -16,6 +16,7 @@ import { usePlatform } from '../context/PlatformContext';
 import { useAuth } from '../context/AuthContext';
 import { analyzeWebsiteWithAI } from '../lib/gemini';
 import { PricingType } from '../types';
+import { trackConversion } from '../lib/analytics';
 
 export const SubmitPage: React.FC = () => {
   const { categories, subcategories, submitCreation } = usePlatform();
@@ -155,6 +156,7 @@ export const SubmitPage: React.FC = () => {
     setSubmitting(false);
 
     if (res.success && res.id) {
+      trackConversion('project_submission_succeeded');
       setSuccessSubmission({
         id: res.id,
         status: user.is_admin ? 'approved' : 'pending',
