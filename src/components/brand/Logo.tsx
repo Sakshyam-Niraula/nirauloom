@@ -96,8 +96,8 @@ export const Logo: React.FC<LogoProps> = ({
   };
 
   const isDark = theme === 'dark';
-  const textColor = isDark ? 'text-sand-100' : 'text-forest-900';
-  const subtextColor = isDark ? 'text-sand-300/70' : 'text-forest-700/80';
+  const textColor = 'text-[#242638]';
+  const subtextColor = 'text-[#62667a]';
 
   const content = (
     <div className={`inline-flex items-center gap-2.5 select-none ${className}`}>
