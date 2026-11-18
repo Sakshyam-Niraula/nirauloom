@@ -34,6 +34,7 @@ export const HomePage: React.FC = () => {
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
     .slice(0, 4);
   const studentCreations = approvedCreations.filter((creation) => creation.is_student_indie).slice(0, 4);
+  const creatorCount = new Set(approvedCreations.map((creation) => creation.creator_id).filter(Boolean)).size;
 
   const handleHeroSearch = (event: React.FormEvent) => {
     event.preventDefault();
@@ -45,21 +46,20 @@ export const HomePage: React.FC = () => {
       <section className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-14 md:pt-24 text-center">
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-forest-900/90 border border-sand-200/25 text-sand-200 text-xs font-semibold shadow-glass mb-7">
           <WovenNIcon size={20} theme="dark" />
-          <span>A discovery platform built for the curious</span>
+          <span>A home for independent digital creations</span>
           <span className="w-1.5 h-1.5 rounded-full bg-electric-500" />
         </div>
 
         <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-sand-100 max-w-4xl mx-auto leading-[1.08]">
-          Find your next favorite
+          Discover independent projects.
           <br />
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-sand-200 via-sand-100 to-electric-400">
-            corner of the internet.
+            Share what you build.
           </span>
         </h1>
 
         <p className="mt-6 text-base sm:text-lg text-sand-300/80 max-w-2xl mx-auto leading-relaxed">
-          Explore useful indie apps, AI tools, open-source projects, and creative experiments.
-          Building something? Give it a home on NIRAULOOM.
+          One place to discover useful apps, AI tools, open-source work, and student projects — or publish your own creation so people can find it.
         </p>
 
         <div className="mt-9 max-w-2xl mx-auto">
@@ -102,7 +102,7 @@ export const HomePage: React.FC = () => {
             className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-sand-200 hover:bg-sand-100 text-forest-950 text-sm font-extrabold transition-all shadow-glass"
           >
             <Rocket className="w-4 h-4" />
-            {user ? 'Submit your creation' : 'Join NIRAULOOM — free'}
+            {user ? 'Publish your project' : 'List your project — free'}
           </Link>
           <Link
             to="/explore"
@@ -113,10 +113,10 @@ export const HomePage: React.FC = () => {
         </div>
 
         <p className="mt-3 text-[11px] text-sand-300/55">
-          Free to join · Share your project · Discover what independent creators are building
+          No listing fees · Browse without an account · Creators keep ownership of their work
         </p>
 
-        <div className="mt-14 grid grid-cols-2 md:grid-cols-3 gap-3 max-w-3xl mx-auto">
+        <div className="mt-14 grid grid-cols-2 md:grid-cols-4 gap-3 max-w-4xl mx-auto">
           <div className="rounded-xl bg-forest-900/40 border border-sand-200/10 p-4">
             <p className="text-2xl font-extrabold text-sand-100">{approvedCreations.length}</p>
             <p className="text-[10px] sm:text-xs text-sand-300/60 uppercase tracking-wider mt-1">Published creations</p>
@@ -125,11 +125,29 @@ export const HomePage: React.FC = () => {
             <p className="text-2xl font-extrabold text-sand-100">{categories.length}</p>
             <p className="text-[10px] sm:text-xs text-sand-300/60 uppercase tracking-wider mt-1">Discovery categories</p>
           </div>
-          <div className="col-span-2 md:col-span-1 rounded-xl bg-forest-900/40 border border-sand-200/10 p-4">
+          <div className="rounded-xl bg-forest-900/40 border border-sand-200/10 p-4">
+            <p className="text-2xl font-extrabold text-sand-100">{creatorCount}</p>
+            <p className="text-[10px] sm:text-xs text-sand-300/60 uppercase tracking-wider mt-1">Creators represented</p>
+          </div>
+          <div className="rounded-xl bg-forest-900/40 border border-sand-200/10 p-4">
             <p className="text-2xl font-extrabold text-sand-100">Free</p>
-            <p className="text-[10px] sm:text-xs text-sand-300/60 uppercase tracking-wider mt-1">Creator membership</p>
+            <p className="text-[10px] sm:text-xs text-sand-300/60 uppercase tracking-wider mt-1">Creator listings</p>
           </div>
         </div>
+      </section>
+
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-8">
+          <p className="text-[11px] font-bold uppercase tracking-wider text-electric-400">Simple by design</p>
+          <h2 className="text-2xl sm:text-3xl font-bold text-sand-100 mt-2">From your idea to discoverable in three steps</h2>
+          <p className="text-sm text-sand-300/70 mt-2">No complicated launch process. Your project can be live in a few minutes after review.</p>
+        </div>
+        <div className="grid md:grid-cols-3 gap-4">
+          <div className="rounded-2xl bg-forest-900/40 border border-sand-200/10 p-6"><span className="text-xs font-bold text-electric-300">01</span><h3 className="font-bold text-sand-100 mt-2">Create your free profile</h3><p className="text-sm text-sand-300/70 mt-2">Use an email sign-in to create your public creator identity.</p></div>
+          <div className="rounded-2xl bg-forest-900/40 border border-sand-200/10 p-6"><span className="text-xs font-bold text-electric-300">02</span><h3 className="font-bold text-sand-100 mt-2">Add your project</h3><p className="text-sm text-sand-300/70 mt-2">Share its name, link, a short description, and category. AI assistance is optional.</p></div>
+          <div className="rounded-2xl bg-forest-900/40 border border-sand-200/10 p-6"><span className="text-xs font-bold text-electric-300">03</span><h3 className="font-bold text-sand-100 mt-2">Get discovered</h3><p className="text-sm text-sand-300/70 mt-2">After a quick review, your listing and creator profile can be explored by visitors.</p></div>
+        </div>
+        <div className="text-center mt-6"><Link to={user ? '/submit' : '/auth?mode=signup'} className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-electric-600 hover:bg-electric-500 text-white text-sm font-bold transition-colors">Start with your project <ArrowRight className="w-4 h-4" /></Link><p className="text-xs text-sand-300/55 mt-2">You can browse the directory without signing up.</p></div>
       </section>
 
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
