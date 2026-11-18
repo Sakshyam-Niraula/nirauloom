@@ -319,3 +319,21 @@ body .loom-button-light { color: #fff !important; }
 .placeholder-sand-300\/50::placeholder,
 .placeholder-sand-300\/60::placeholder { color:#62667a !important; opacity:1 !important; }
 header a, header button, header input { text-shadow:none; }
+
+
+/* Creator profile: legacy opacity-suffixed sand text classes bypassed
+   the earlier exact-token mappings. Force readable ink on the light profile surfaces. */
+.creator-profile-page [class*="text-sand-"] {
+  color: #242638 !important;
+}
+.creator-profile-page [class*="text-sand-300"],
+.creator-profile-page [class*="text-sand-400"],
+.creator-profile-page [class*="text-sand-500"] {
+  color: #55596d !important;
+}
+.creator-profile-page a:hover,
+.creator-profile-page button:hover { color: #303bb8; }
+.creator-profile-page .text-amber-300,
+.creator-profile-page .text-amber-400,
+.creator-profile-page .text-rose-300,
+.creator-profile-page .text-rose-400 { color: inherit; }
