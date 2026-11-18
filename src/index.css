@@ -304,3 +304,18 @@ body :where(button,a) .text-white,
 body .loom-button-primary,
 body .loom-search button,
 body .loom-button-light { color: #fff !important; }
+
+
+/* LIGHT THEME: legacy Tailwind text tokens must not stay white on pale surfaces.
+   Surface tokens were remapped for the porcelain palette; remap their paired text tokens too. */
+.text-sand-50,.text-sand-100 { color:#242638 !important; }
+.text-sand-200 { color:#41445a !important; }
+.text-sand-300 { color:#55596d !important; }
+.text-sand-400,.text-sand-500 { color:#62667a !important; }
+.text-electric-300,.text-electric-400 { color:#b94735 !important; }
+.text-electric-500 { color:#a83d30 !important; }
+.text-forest-400,.text-forest-500,.text-forest-600 { color:#3944c6 !important; }
+.placeholder-sand-300\/40::placeholder,
+.placeholder-sand-300\/50::placeholder,
+.placeholder-sand-300\/60::placeholder { color:#62667a !important; opacity:1 !important; }
+header a, header button, header input { text-shadow:none; }
