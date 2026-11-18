@@ -270,3 +270,37 @@ html,body{background:#f7f6f2!important;color:#242638}::selection{background:#dce
 .loom-pathway{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;max-width:535px;margin-top:27px;padding-top:17px;border-top:1px solid rgba(53,59,105,.13)}.loom-pathway-step{display:grid;grid-template-columns:22px 1fr;column-gap:7px;align-items:center}.loom-pathway-step>span{grid-row:span 2;display:grid;place-items:center;width:22px;height:22px;border-radius:7px;background:#e6e8ff;color:#414ee8;font:9px 'DM Mono',monospace}.loom-pathway-step b{color:#33364d;font:700 11px 'DM Sans',sans-serif}.loom-pathway-step small{color:#898b9b;font-size:9px;margin-top:2px}.loom-pathway-heading{grid-column:1/-1;color:#8a8c9d;font:9px 'DM Mono',monospace;letter-spacing:.13em;margin-bottom:2px}
 .loom-hero-copy{position:relative}.loom-hero-copy:before{content:'';position:absolute;z-index:-1;width:410px;height:410px;left:-185px;top:-95px;border-radius:50%;background:radial-gradient(circle,rgba(255,128,104,.12),transparent 68%);pointer-events:none}
 @media(max-width:700px){.loom-pathway{gap:6px;margin-top:22px}.loom-pathway-step{grid-template-columns:19px 1fr;column-gap:5px}.loom-pathway-step>span{width:19px;height:19px}.loom-pathway-step b{font-size:10px}.loom-pathway-step small{font-size:8px}}
+
+
+/* Global light-theme contrast correction — keep all body copy readable */
+:root {
+  --text-primary: #202238;
+  --text-secondary: #4f5368;
+  --text-muted: #62667a;
+}
+body { color: var(--text-primary); }
+body p, body li, body label, body small { color: inherit; }
+body .text-sand-400,
+body .text-sand-500,
+body .text-gray-400,
+body .text-gray-500,
+body .text-slate-400,
+body .text-slate-500,
+body .text-zinc-400,
+body .text-zinc-500 { color: var(--text-secondary) !important; }
+body .text-muted,
+body .text-secondary,
+body [class*="text-"][class*="muted"] { color: var(--text-secondary); }
+body input::placeholder,
+body textarea::placeholder { color: #666a7d !important; opacity: 1; }
+body :where(a,button):focus-visible,
+body :where(input,textarea,select):focus-visible {
+  outline: 3px solid rgba(65,78,232,.45);
+  outline-offset: 3px;
+}
+/* White text remains white on intentional colored controls and dark surfaces. */
+body :where(button,a).text-white,
+body :where(button,a) .text-white,
+body .loom-button-primary,
+body .loom-search button,
+body .loom-button-light { color: #fff !important; }
