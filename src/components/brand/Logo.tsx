@@ -15,9 +15,9 @@ export const WovenNIcon: React.FC<{ size?: number; className?: string; theme?: '
   theme = 'dark',
 }) => {
   const isDark = theme === 'dark';
-  const pillarColor = isDark ? '#E8DCC5' : '#173F35';
-  const bgDisc = isDark ? '#112F28' : '#F5F0E6';
-  const borderColor = isDark ? 'rgba(232, 220, 197, 0.2)' : 'rgba(23, 63, 53, 0.15)';
+  const pillarColor = isDark ? '#F9F8F5' : '#292B40';
+  const bgDisc = isDark ? '#292B40' : '#FFFFFF';
+  const borderColor = isDark ? 'rgba(249, 248, 245, 0.2)' : 'rgba(41, 43, 64, 0.14)';
 
   return (
     <svg
@@ -31,9 +31,9 @@ export const WovenNIcon: React.FC<{ size?: number; className?: string; theme?: '
     >
       <defs>
         <linearGradient id={`n-weave-grad-${theme}`} x1="16" y1="16" x2="48" y2="48" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#8B5CF6" />
-          <stop offset="50%" stopColor="#A78BFA" />
-          <stop offset="100%" stopColor={isDark ? '#E8DCC5' : '#173F35'} />
+          <stop offset="0%" stopColor="#414EE8" />
+          <stop offset="50%" stopColor="#FF8068" />
+          <stop offset="100%" stopColor={isDark ? '#F9F8F5' : '#292B40'} />
         </linearGradient>
         <filter id="subtle-glow" x="-10%" y="-10%" width="120%" height="120%" filterUnits="userSpaceOnUse">
           <feGaussianBlur stdDeviation="1.5" result="glow" />
@@ -68,8 +68,8 @@ export const WovenNIcon: React.FC<{ size?: number; className?: string; theme?: '
       />
 
       {/* Central Loom Knot - Focal point representing discovery connection */}
-      <circle cx="32" cy="32" r="3.5" fill="#8B5CF6" />
-      <circle cx="32" cy="32" r="1.5" fill="#E8DCC5" />
+      <circle cx="32" cy="32" r="3.5" fill="#414EE8" />
+      <circle cx="32" cy="32" r="1.5" fill="#FF8068" />
     </svg>
   );
 };
