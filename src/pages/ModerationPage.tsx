@@ -84,6 +84,9 @@ export const ModerationPage: React.FC = () => {
             Review community submissions, enforce safety guidelines, and manage incoming user reports.
           </p>
         </div>
+        <Link to="/moderation/conversion-analytics" className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-electric-500/15 border border-electric-500/25 text-electric-200 text-xs font-semibold hover:bg-electric-500/25">
+          <TrendingUp className="w-4 h-4" /> Conversion analytics
+        </Link>
       </div>
 
       {/* Tabs */}
