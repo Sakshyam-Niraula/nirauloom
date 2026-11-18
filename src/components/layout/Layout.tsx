@@ -4,7 +4,7 @@ import { Footer } from './Footer';
 
 export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
-    <div className="min-h-screen flex flex-col bg-forest-950 text-sand-100 selection:bg-electric-500 selection:text-white relative overflow-x-hidden">
+    <div className="min-h-screen flex flex-col bg-forest-950 text-sand-600 selection:bg-electric-500 selection:text-white relative overflow-x-hidden">
       {/* Subtle Ambient Background Gradient Lighting */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
         <div className="absolute -top-40 -left-40 w-96 h-96 bg-forest-800/20 rounded-full blur-3xl" />
