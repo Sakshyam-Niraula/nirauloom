@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Search,
@@ -19,12 +19,15 @@ import { WovenNIcon } from '../components/brand/Logo';
 import { CreationCard } from '../components/creations/CreationCard';
 import { usePlatform } from '../context/PlatformContext';
 import { useAuth } from '../context/AuthContext';
+import { trackConversion } from '../lib/analytics';
 
 export const HomePage: React.FC = () => {
   const { creations, categories, loading } = usePlatform();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [heroSearch, setHeroSearch] = useState('');
+
+  useEffect(() => { trackConversion('homepage_view'); }, []);
 
   const approvedCreations = creations.filter((creation) => creation.status === 'approved');
   const trendingCreations = [...approvedCreations]
@@ -99,6 +102,7 @@ export const HomePage: React.FC = () => {
         <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
           <Link
             to={user ? '/submit' : '/auth?mode=signup'}
+            onClick={() => { if (!user) trackConversion('signup_cta_click'); }}
             className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-sand-200 hover:bg-sand-100 text-forest-950 text-sm font-extrabold transition-all shadow-glass"
           >
             <Rocket className="w-4 h-4" />
@@ -218,7 +222,7 @@ export const HomePage: React.FC = () => {
               NIRAULOOM is opening its doors to independent makers. Share a project you have built,
               or explore the directory while the community grows.
             </p>
-            <Link to={user ? '/submit' : '/auth?mode=signup'} className="inline-flex items-center gap-2 mt-5 px-5 py-2.5 rounded-xl bg-electric-600 hover:bg-electric-500 text-white text-xs font-bold transition-colors">
+            <Link to={user ? '/submit' : '/auth?mode=signup'} onClick={() => { if (!user) trackConversion('signup_cta_click'); }} className="inline-flex items-center gap-2 mt-5 px-5 py-2.5 rounded-xl bg-electric-600 hover:bg-electric-500 text-white text-xs font-bold transition-colors">
               {user ? 'Submit a creation' : 'Create your free account'} <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
@@ -269,7 +273,7 @@ export const HomePage: React.FC = () => {
                 Submissions are reviewed before appearing in the directory.
               </p>
               <div className="mt-6 flex flex-wrap gap-3">
-                <Link to={user ? '/submit' : '/auth?mode=signup'} className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-sand-200 hover:bg-sand-100 text-forest-950 text-xs font-extrabold transition-colors">
+                <Link to={user ? '/submit' : '/auth?mode=signup'} onClick={() => { if (!user) trackConversion('signup_cta_click'); }} className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-sand-200 hover:bg-sand-100 text-forest-950 text-xs font-extrabold transition-colors">
                   {user ? 'Submit your project' : 'Create a free creator account'} <ArrowRight className="w-4 h-4" />
                 </Link>
                 <Link to="/creators" className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-forest-950/50 hover:bg-forest-950 text-sand-100 text-xs font-semibold border border-sand-200/20 transition-colors">
