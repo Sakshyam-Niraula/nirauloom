@@ -53,7 +53,7 @@ export const Navbar: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between gap-4">
         {/* Left: Brand Logo */}
         <div className="flex items-center gap-6">
-          <Logo variant="horizontal" theme="dark" size="md" />
+          <Logo variant="horizontal" theme="light" size="md" />
 
           {/* Desktop Navigation Links */}
           <nav className="hidden 2xl:flex items-center gap-0.5">
