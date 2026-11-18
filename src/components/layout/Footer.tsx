@@ -7,17 +7,17 @@ import { isGeminiConfigured } from '../../lib/gemini';
 
 export const Footer: React.FC = () => {
   return (
-    <footer className="w-full border-t border-sand-200/10 bg-forest-950 text-sand-300/80 pt-16 pb-12 transition-colors">
+    <footer className="w-full border-t border-[#dedee8] bg-[#f1f0eb] text-[#4f5368] pt-16 pb-12 transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 pb-12 border-b border-sand-200/10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 pb-12 border-b border-[#dedee8]">
           {/* Brand Info */}
           <div className="lg:col-span-2 space-y-4">
-            <Logo variant="horizontal" theme="dark" size="md" />
-            <p className="text-sm text-sand-300/70 max-w-sm leading-relaxed">
+            <Logo variant="horizontal" theme="light" size="md" />
+            <p className="text-sm text-[#4f5368] max-w-sm leading-relaxed">
               Discover the Internet, One Creation at a Time. NIRAULOOM is a modern digital creation discovery platform
               uniting web experiences, independent software, and creative tools from makers worldwide.
             </p>
-            <div className="flex items-center gap-3 pt-2 text-xs text-sand-300/60">
+            <div className="flex items-center gap-3 pt-2 text-xs text-[#62667a]">
               <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-forest-900 border border-sand-200/15">
                 <span className={`w-2 h-2 rounded-full ${isSupabaseConfigured ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`} />
                 <span>Supabase DB: {isSupabaseConfigured ? 'Connected' : 'Local Preview'}</span>
@@ -31,9 +31,9 @@ export const Footer: React.FC = () => {
 
           {/* Discovery Column */}
           <div className="space-y-3">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-sand-100 font-sans">Discovery</h4>
+            <h4 className="text-xs font-bold uppercase tracking-wider text-[#242638] font-sans">Discovery</h4>
             <ul className="space-y-2 text-xs">
-              <li><Link to="/explore" className="hover:text-sand-100 transition-colors">All Creations</Link></li>
+              <li><Link to="/explore" className="hover:text-[#242638] transition-colors">All Creations</Link></li>
               <li><Link to="/explore?sort=trending" className="hover:text-sand-100 transition-colors">Trending Launcher</Link></li>
               <li><Link to="/explore?filter=student" className="hover:text-sand-100 transition-colors">Student & Indie Makers</Link></li>
               <li><Link to="/categories" className="hover:text-sand-100 transition-colors">Categories Index</Link></li>
@@ -56,18 +56,18 @@ export const Footer: React.FC = () => {
           {/* Platform Standards and Contact */}
           <div className="space-y-3">
             <h4 className="text-xs font-bold uppercase tracking-wider text-sand-100 font-sans">Integrity & Safe Discovery</h4>
-            <p className="text-xs text-sand-300/60 leading-relaxed">
+            <p className="text-xs text-[#55596d] leading-relaxed">
               Creations undergo peer and moderator verification. External websites are sandboxed and opened safely with security headers.
             </p>
-            <div className="flex items-center gap-2 pt-1 text-xs text-sand-300/50">
-              <Shield className="w-3.5 h-3.5 text-sand-200" />
+            <div className="flex items-center gap-2 pt-1 text-xs text-[#62667a]">
+              <Shield className="w-3.5 h-3.5 text-[#41445a]" />
               <span>Row Level Security Enforced</span>
             </div>
             <div className="pt-4 space-y-2">
               <h4 className="text-xs font-bold uppercase tracking-wider text-sand-100 font-sans">Contact</h4>
               <a
                 href="mailto:hello.nirauloom@gmail.com"
-                className="inline-flex items-center gap-2 text-xs text-sand-300/70 hover:text-sand-100 transition-colors"
+                className="inline-flex items-center gap-2 text-xs text-[#4f5368] hover:text-[#242638] transition-colors"
               >
                 <Mail className="w-3.5 h-3.5" />
                 hello.nirauloom@gmail.com
