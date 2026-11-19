@@ -5,7 +5,7 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
   --loom-ink: #09130f;
   --loom-forest: #173f35;
   --loom-paper: #f0eadc;
@@ -17,11 +17,11 @@
 
 @layer base {
   * { box-sizing: border-box; }
-  html { scroll-behavior: smooth; background: var(--loom-ink); }
+  html { scroll-behavior: smooth; background: #f7f8fc; }
   body {
     margin: 0;
-    background: var(--loom-ink);
-    color: var(--loom-paper);
+    background: #f7f8fc;
+    color: #20243a;
     font-family: 'DM Sans', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
   }
@@ -31,15 +31,15 @@
 }
 
 ::-webkit-scrollbar { width: 7px; height: 7px; }
-::-webkit-scrollbar-track { background: #0b1913; }
-::-webkit-scrollbar-thumb { background: #355b49; border-radius: 99px; }
-::-webkit-scrollbar-thumb:hover { background: #6e8a67; }
+::-webkit-scrollbar-track { background: #eef0f6; }
+::-webkit-scrollbar-thumb { background: #b8bfd2; border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: #7b84a0; }
 
 .glass-panel {
-  background: rgba(13, 38, 32, .55);
+  background: rgba(255, 255, 255, .82);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(232, 220, 197, .14);
+  border: 1px solid rgba(49, 54, 110, .12);
 }
 
 /* NIRAULOOM — an original visual language built around woven connections */
@@ -319,3 +319,32 @@ body .loom-button-light { color: #fff !important; }
 .placeholder-sand-300\/50::placeholder,
 .placeholder-sand-300\/60::placeholder { color:#62667a !important; opacity:1 !important; }
 header a, header button, header input { text-shadow:none; }
+
+
+/* Global light-theme compatibility layer for legacy page utility classes.
+   The homepage's .loom-* art direction remains intentionally dark and self-contained. */
+@layer base {
+  :root { color-scheme: light; }
+  body { background-color: #f7f8fc; color: #20243a; }
+  input, textarea, select { color-scheme: light; }
+}
+
+@layer utilities {
+  .text-sand-50, .text-sand-100, .text-sand-200, .text-sand-300,
+  .text-sand-400, .text-sand-500 {
+    color: #34384f !important;
+  }
+  .placeholder-sand-300\/50::placeholder,
+  .placeholder-sand-300\/60::placeholder,
+  .placeholder-sand-400\/50::placeholder {
+    color: #777d92 !important;
+    opacity: 1;
+  }
+}
+
+/* Shared surfaces, forms, and navigation should stay readable on every route. */
+.glass-panel {
+  background: rgba(255, 255, 255, .82);
+  border-color: rgba(49, 54, 110, .12);
+  color: #292d45;
+}
