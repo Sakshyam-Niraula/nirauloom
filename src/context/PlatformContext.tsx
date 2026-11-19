@@ -327,12 +327,19 @@ export const PlatformProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     rejectionReason?: string
   ): Promise<boolean> => {
     if (isSupabaseConfigured && supabase) {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('creations')
         .update({ status, rejection_reason: rejectionReason || null, updated_at: new Date().toISOString() })
-        .eq('id', creationId);
+        .eq('id', creationId)
+        .select('id')
+        .maybeSingle();
       if (error) {
         console.error('Could not update creation status:', error);
+        return false;
+      }
+      // PostgREST can return no error but zero updated rows when RLS blocks the action.
+      if (!data?.id) {
+        console.error('No creation was updated. Check the signed-in admin profile and creations UPDATE policy.');
         return false;
       }
     }
