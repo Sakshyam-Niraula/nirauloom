@@ -32,18 +32,20 @@ export const ModerationPage: React.FC = () => {
   const [selectedAgent, setSelectedAgent] = useState<'scout' | 'onboarding' | 'analyst'>('scout');
   const [rejectReasonModal, setRejectReasonModal] = useState<string | null>(null);
   const [rejectionInput, setRejectionInput] = useState('');
+  const [processingId, setProcessingId] = useState<string | null>(null);
+  const [actionMessage, setActionMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   if (!user || !user.is_admin) {
     return (
       <div className="max-w-xl mx-auto py-24 px-4 text-center space-y-4">
         <ShieldCheck className="w-12 h-12 text-rose-400 mx-auto" />
-        <h2 className="text-2xl font-bold text-sand-100">Restricted Moderator Area</h2>
-        <p className="text-xs text-sand-300/70">
+        <h2 className="text-2xl font-bold text-slate-900">Restricted Moderator Area</h2>
+        <p className="text-xs text-slate-600">
           This portal requires administrator privileges. If testing in development, switch to the Admin demo user (Elena Rostova) via the profile menu.
         </p>
         <Link
           to="/"
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-forest-800 text-sand-100 text-xs font-semibold"
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-100 text-slate-900 text-xs font-semibold"
         >
           Return Home
         </Link>
@@ -56,47 +58,74 @@ export const ModerationPage: React.FC = () => {
   const rejectedCreations = creations.filter(c => c.status === 'rejected');
 
   const handleApprove = async (id: string) => {
-    await updateCreationStatus(id, 'approved');
+    if (processingId) return;
+    setProcessingId(id);
+    setActionMessage(null);
+    try {
+      const ok = await updateCreationStatus(id, 'approved');
+      setActionMessage(ok
+        ? { type: 'success', text: 'Project approved and published successfully.' }
+        : { type: 'error', text: 'Approval was not saved. Refresh the page and sign in again. If it persists, check the admin UPDATE permission in Supabase.' });
+    } catch (error) {
+      console.error('Approval failed:', error);
+      setActionMessage({ type: 'error', text: 'Approval failed. Please try again.' });
+    } finally {
+      setProcessingId(null);
+    }
   };
 
   const handleRejectSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!rejectReasonModal) return;
-    await updateCreationStatus(rejectReasonModal, 'rejected', rejectionInput.trim() || 'Did not meet platform guidelines.');
-    setRejectReasonModal(null);
-    setRejectionInput('');
+    setProcessingId(rejectReasonModal);
+    setActionMessage(null);
+    const ok = await updateCreationStatus(rejectReasonModal, 'rejected', rejectionInput.trim() || 'Did not meet platform guidelines.');
+    setProcessingId(null);
+    setActionMessage(ok
+      ? { type: 'success', text: 'Project rejected and the review queue was updated.' }
+      : { type: 'error', text: 'Rejection was not saved. Please refresh and try again.' });
+    if (ok) {
+      setRejectReasonModal(null);
+      setRejectionInput('');
+    }
   };
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-sand-200/10 pb-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-200 pb-6">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-3xl font-extrabold text-sand-100 font-sans tracking-tight">
+            <h1 className="text-3xl font-extrabold text-slate-900 font-sans tracking-tight">
               Moderation & Trust Center
             </h1>
-            <span className="px-2.5 py-0.5 rounded text-[10px] font-bold uppercase bg-electric-500/20 text-electric-300 border border-electric-500/30">
+            <span className="px-2.5 py-0.5 rounded text-[10px] font-bold uppercase bg-electric-500/20 text-indigo-700 border border-electric-500/30">
               Admin Mode
             </span>
           </div>
-          <p className="text-xs text-sand-300/70 mt-1">
+          <p className="text-xs text-slate-600 mt-1">
             Review community submissions, enforce safety guidelines, and manage incoming user reports.
           </p>
         </div>
-        <Link to="/moderation/conversion-analytics" className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-electric-500/15 border border-electric-500/25 text-electric-200 text-xs font-semibold hover:bg-electric-500/25">
+        <Link to="/moderation/conversion-analytics" className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-electric-500/15 border border-electric-500/25 text-indigo-800 text-xs font-semibold hover:bg-electric-500/25">
           <TrendingUp className="w-4 h-4" /> Conversion analytics
         </Link>
       </div>
 
+      {actionMessage && (
+        <div role="status" aria-live="polite" className={`rounded-xl border px-4 py-3 text-sm font-medium ${actionMessage.type === 'success' ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-rose-200 bg-rose-50 text-rose-800'}`}>
+          {actionMessage.text}
+        </div>
+      )}
+
       {/* Tabs */}
-      <div className="flex flex-wrap items-center gap-2 border-b border-sand-200/10 pb-2">
+      <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 pb-2">
         <button
           onClick={() => setActiveTab('overview')}
           className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
             activeTab === 'overview'
-              ? 'bg-forest-800 text-sand-100 border border-sand-200/20'
-              : 'text-sand-300/70 hover:text-sand-100'
+              ? 'bg-slate-100 text-slate-900 border border-slate-200'
+              : 'text-slate-600 hover:text-slate-900'
           }`}
         >
           <LayoutDashboard className="w-4 h-4" />
@@ -106,8 +135,8 @@ export const ModerationPage: React.FC = () => {
           onClick={() => setActiveTab('pending')}
           className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
             activeTab === 'pending'
-              ? 'bg-forest-800 text-sand-100 border border-sand-200/20'
-              : 'text-sand-300/70 hover:text-sand-100'
+              ? 'bg-slate-100 text-slate-900 border border-slate-200'
+              : 'text-slate-600 hover:text-slate-900'
           }`}
         >
           <Clock className="w-4 h-4 text-amber-400" />
@@ -118,8 +147,8 @@ export const ModerationPage: React.FC = () => {
           onClick={() => setActiveTab('reports')}
           className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
             activeTab === 'reports'
-              ? 'bg-forest-800 text-sand-100 border border-sand-200/20'
-              : 'text-sand-300/70 hover:text-sand-100'
+              ? 'bg-slate-100 text-slate-900 border border-slate-200'
+              : 'text-slate-600 hover:text-slate-900'
           }`}
         >
           <AlertTriangle className="w-4 h-4 text-rose-400" />
@@ -130,11 +159,11 @@ export const ModerationPage: React.FC = () => {
           onClick={() => setActiveTab('agents')}
           className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
             activeTab === 'agents'
-              ? 'bg-forest-800 text-sand-100 border border-sand-200/20'
-              : 'text-sand-300/70 hover:text-sand-100'
+              ? 'bg-slate-100 text-slate-900 border border-slate-200'
+              : 'text-slate-600 hover:text-slate-900'
           }`}
         >
-          <Bot className="w-4 h-4 text-electric-300" />
+          <Bot className="w-4 h-4 text-indigo-700" />
           <span>AI Agents</span>
         </button>
 
@@ -142,8 +171,8 @@ export const ModerationPage: React.FC = () => {
           onClick={() => setActiveTab('bookmarks')}
           className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
             activeTab === 'bookmarks'
-              ? 'bg-forest-800 text-sand-100 border border-sand-200/20'
-              : 'text-sand-300/70 hover:text-sand-100'
+              ? 'bg-slate-100 text-slate-900 border border-slate-200'
+              : 'text-slate-600 hover:text-slate-900'
           }`}
         >
           <Bookmark className="w-4 h-4" />
@@ -154,8 +183,8 @@ export const ModerationPage: React.FC = () => {
           onClick={() => setActiveTab('all')}
           className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
             activeTab === 'all'
-              ? 'bg-forest-800 text-sand-100 border border-sand-200/20'
-              : 'text-sand-300/70 hover:text-sand-100'
+              ? 'bg-slate-100 text-slate-900 border border-slate-200'
+              : 'text-slate-600 hover:text-slate-900'
           }`}
         >
           <ShieldCheck className="w-4 h-4" />
@@ -175,12 +204,12 @@ export const ModerationPage: React.FC = () => {
             ].map((stat) => {
               const Icon = stat.icon;
               return (
-                <div key={stat.label} className="rounded-2xl border border-sand-200/10 bg-forest-900/40 p-4">
+                <div key={stat.label} className="rounded-2xl border border-slate-200 bg-white p-4">
                   <div className="flex items-center justify-between gap-2">
-                    <p className="text-xs text-sand-300/65">{stat.label}</p>
-                    <Icon className="w-4 h-4 text-electric-300" />
+                    <p className="text-xs text-slate-600">{stat.label}</p>
+                    <Icon className="w-4 h-4 text-indigo-700" />
                   </div>
-                  <p className="text-2xl font-extrabold text-sand-100 mt-2">{stat.value}</p>
+                  <p className="text-2xl font-extrabold text-slate-900 mt-2">{stat.value}</p>
                 </div>
               );
             })}
@@ -188,56 +217,56 @@ export const ModerationPage: React.FC = () => {
 
           <section className="space-y-3">
             <div>
-              <h2 className="text-lg font-bold text-sand-100">Your AI workspace</h2>
-              <p className="text-xs text-sand-300/65 mt-1">Agents work on research and preparation. You stay in control of external actions.</p>
+              <h2 className="text-lg font-bold text-slate-900">Your AI workspace</h2>
+              <p className="text-xs text-slate-600 mt-1">Agents work on research and preparation. You stay in control of external actions.</p>
             </div>
             <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
-              <article className="rounded-2xl border border-electric-400/25 bg-forest-900/50 p-5 space-y-3">
+              <article className="rounded-2xl border border-electric-400/25 bg-white p-5 space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] uppercase tracking-wider font-bold text-emerald-300">Available</span>
-                  <TrendingUp className="w-5 h-5 text-electric-300" />
+                  <TrendingUp className="w-5 h-5 text-indigo-700" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-sand-100">Growth Scout</h3>
-                  <p className="text-xs text-sand-300/70 mt-1">Find public project launches, assess fit, and prepare invitation drafts for your review.</p>
+                  <h3 className="text-base font-bold text-slate-900">Growth Scout</h3>
+                  <p className="text-xs text-slate-600 mt-1">Find public project launches, assess fit, and prepare invitation drafts for your review.</p>
                 </div>
-                <button onClick={() => setActiveTab('agents')} className="text-xs font-semibold text-electric-300 hover:text-sand-100 underline underline-offset-4">
+                <button onClick={() => setActiveTab('agents')} className="text-xs font-semibold text-indigo-700 hover:text-slate-900 underline underline-offset-4">
                   Open agent
                 </button>
               </article>
 
-              <article className="rounded-2xl border border-sand-200/10 bg-forest-900/30 p-5 space-y-3">
+              <article className="rounded-2xl border border-slate-200 bg-white p-5 space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] uppercase tracking-wider font-bold text-emerald-300">Available</span>
-                  <Users className="w-5 h-5 text-sand-300/70" />
+                  <Users className="w-5 h-5 text-slate-600" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-sand-100">Creator Onboarding</h3>
-                  <p className="text-xs text-sand-300/70 mt-1">Turn a public project URL into a suggested Nirauloom listing for your approval.</p>
+                  <h3 className="text-base font-bold text-slate-900">Creator Onboarding</h3>
+                  <p className="text-xs text-slate-600 mt-1">Turn a public project URL into a suggested Nirauloom listing for your approval.</p>
                 </div>
-                <button onClick={() => { setSelectedAgent("onboarding"); setActiveTab("agents"); }} className="text-xs font-semibold text-electric-300 underline underline-offset-4">Open agent</button>
+                <button onClick={() => { setSelectedAgent("onboarding"); setActiveTab("agents"); }} className="text-xs font-semibold text-indigo-700 underline underline-offset-4">Open agent</button>
               </article>
 
-              <article className="rounded-2xl border border-sand-200/10 bg-forest-900/30 p-5 space-y-3">
+              <article className="rounded-2xl border border-slate-200 bg-white p-5 space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] uppercase tracking-wider font-bold text-emerald-300">Available</span>
-                  <TrendingUp className="w-5 h-5 text-sand-300/70" />
+                  <TrendingUp className="w-5 h-5 text-slate-600" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-sand-100">Growth Analyst</h3>
-                  <p className="text-xs text-sand-300/70 mt-1">Explain visitor-to-signup conversion, popular pages, and where creators drop off.</p>
+                  <h3 className="text-base font-bold text-slate-900">Growth Analyst</h3>
+                  <p className="text-xs text-slate-600 mt-1">Explain visitor-to-signup conversion, popular pages, and where creators drop off.</p>
                 </div>
-                <button onClick={() => { setSelectedAgent("analyst"); setActiveTab("agents"); }} className="text-xs font-semibold text-electric-300 underline underline-offset-4">Open agent</button>
+                <button onClick={() => { setSelectedAgent("analyst"); setActiveTab("agents"); }} className="text-xs font-semibold text-indigo-700 underline underline-offset-4">Open agent</button>
               </article>
             </div>
           </section>
 
-          <section className="rounded-2xl border border-sand-200/10 bg-forest-900/30 p-5">
-            <h2 className="text-sm font-bold text-sand-100">Platform health at a glance</h2>
+          <section className="rounded-2xl border border-slate-200 bg-white p-5">
+            <h2 className="text-sm font-bold text-slate-900">Platform health at a glance</h2>
             <div className="grid sm:grid-cols-3 gap-4 mt-4 text-xs">
-              <div><p className="text-sand-300/55">Rejected projects</p><p className="text-lg font-bold text-sand-100 mt-1">{rejectedCreations.length}</p></div>
-              <div><p className="text-sand-300/55">Open reports</p><p className="text-lg font-bold text-sand-100 mt-1">{reports.length}</p></div>
-              <div><p className="text-sand-300/55">Current bookmarks</p><p className="text-lg font-bold text-sand-100 mt-1">{bookmarks.length}</p></div>
+              <div><p className="text-slate-500">Rejected projects</p><p className="text-lg font-bold text-slate-900 mt-1">{rejectedCreations.length}</p></div>
+              <div><p className="text-slate-500">Open reports</p><p className="text-lg font-bold text-slate-900 mt-1">{reports.length}</p></div>
+              <div><p className="text-slate-500">Current bookmarks</p><p className="text-lg font-bold text-slate-900 mt-1">{bookmarks.length}</p></div>
             </div>
           </section>
         </div>
@@ -246,10 +275,10 @@ export const ModerationPage: React.FC = () => {
       {/* AI Agent workspace */}
       {activeTab === 'agents' && (
   <div className="space-y-6">
-    <div className="flex flex-wrap gap-2 border-b border-sand-200/10 pb-3">
-      <button onClick={() => setSelectedAgent('scout')} className={selectedAgent === 'scout' ? 'rounded-xl px-4 py-2 text-xs font-semibold bg-forest-800 text-sand-100 border border-sand-200/20' : 'rounded-xl px-4 py-2 text-xs font-semibold text-sand-300/70 hover:text-sand-100'}>Growth Scout</button>
-      <button onClick={() => setSelectedAgent('onboarding')} className={selectedAgent === 'onboarding' ? 'rounded-xl px-4 py-2 text-xs font-semibold bg-forest-800 text-sand-100 border border-sand-200/20' : 'rounded-xl px-4 py-2 text-xs font-semibold text-sand-300/70 hover:text-sand-100'}>Creator Onboarding</button>
-      <button onClick={() => setSelectedAgent('analyst')} className={selectedAgent === 'analyst' ? 'rounded-xl px-4 py-2 text-xs font-semibold bg-forest-800 text-sand-100 border border-sand-200/20' : 'rounded-xl px-4 py-2 text-xs font-semibold text-sand-300/70 hover:text-sand-100'}>Growth Analyst</button>
+    <div className="flex flex-wrap gap-2 border-b border-slate-200 pb-3">
+      <button onClick={() => setSelectedAgent('scout')} className={selectedAgent === 'scout' ? 'rounded-xl px-4 py-2 text-xs font-semibold bg-slate-100 text-slate-900 border border-slate-200' : 'rounded-xl px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-900'}>Growth Scout</button>
+      <button onClick={() => setSelectedAgent('onboarding')} className={selectedAgent === 'onboarding' ? 'rounded-xl px-4 py-2 text-xs font-semibold bg-slate-100 text-slate-900 border border-slate-200' : 'rounded-xl px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-900'}>Creator Onboarding</button>
+      <button onClick={() => setSelectedAgent('analyst')} className={selectedAgent === 'analyst' ? 'rounded-xl px-4 py-2 text-xs font-semibold bg-slate-100 text-slate-900 border border-slate-200' : 'rounded-xl px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-900'}>Growth Analyst</button>
     </div>
     {selectedAgent === 'scout' && <GrowthScoutPage />}
     {selectedAgent === 'onboarding' && <CreatorOnboardingPage />}
@@ -261,11 +290,11 @@ export const ModerationPage: React.FC = () => {
       {activeTab === 'bookmarks' && (
         <div className="space-y-4">
           {creations.filter((creation) => bookmarks.includes(creation.id)).length === 0 ? (
-            <div className="py-16 text-center border border-dashed border-sand-200/20 rounded-2xl bg-forest-900/20">
-              <Bookmark className="w-9 h-9 text-sand-300/40 mx-auto mb-3" />
-              <p className="text-sm font-semibold text-sand-200">No bookmarks saved yet</p>
-              <p className="text-xs text-sand-300/60 mt-1">Projects you bookmark while exploring will appear here.</p>
-              <Link to="/explore" className="inline-flex mt-4 px-4 py-2 rounded-xl bg-forest-800 text-sand-100 text-xs font-semibold">
+            <div className="py-16 text-center border border-dashed border-slate-200 rounded-2xl bg-slate-50">
+              <Bookmark className="w-9 h-9 text-slate-400 mx-auto mb-3" />
+              <p className="text-sm font-semibold text-slate-800">No bookmarks saved yet</p>
+              <p className="text-xs text-slate-600 mt-1">Projects you bookmark while exploring will appear here.</p>
+              <Link to="/explore" className="inline-flex mt-4 px-4 py-2 rounded-xl bg-slate-100 text-slate-900 text-xs font-semibold">
                 Explore projects
               </Link>
             </div>
@@ -283,40 +312,40 @@ export const ModerationPage: React.FC = () => {
       {activeTab === 'pending' && (
         <div className="space-y-4">
           {pendingCreations.length === 0 ? (
-            <div className="py-16 text-center border border-dashed border-sand-200/20 rounded-2xl bg-forest-900/20">
+            <div className="py-16 text-center border border-dashed border-slate-200 rounded-2xl bg-slate-50">
               <CheckCircle className="w-10 h-10 text-emerald-400/70 mx-auto mb-2" />
-              <p className="text-sm font-semibold text-sand-200">Pending queue is clear!</p>
-              <p className="text-xs text-sand-300/60 mt-1">All submissions have been reviewed.</p>
+              <p className="text-sm font-semibold text-slate-800">Pending queue is clear!</p>
+              <p className="text-xs text-slate-600 mt-1">All submissions have been reviewed.</p>
             </div>
           ) : (
             pendingCreations.map((item) => (
               <div
                 key={item.id}
-                className="p-5 rounded-2xl bg-forest-900/40 border border-sand-200/15 backdrop-blur-sm space-y-3"
+                className="p-5 rounded-2xl bg-white border border-slate-200 backdrop-blur-sm space-y-3"
               >
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                   <div className="flex items-start gap-3">
                     <img
                       src={item.logo_url}
                       alt={item.name}
-                      className="w-14 h-14 rounded-xl object-cover border border-sand-200/20 shrink-0"
+                      className="w-14 h-14 rounded-xl object-cover border border-slate-200 shrink-0"
                     />
                     <div>
                       <div className="flex items-center gap-2">
-                        <h3 className="text-base font-bold text-sand-100">{item.name}</h3>
+                        <h3 className="text-base font-bold text-slate-900">{item.name}</h3>
                         <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30">
                           Pending
                         </span>
-                        <span className="px-2 py-0.5 rounded text-[10px] bg-forest-800 text-sand-200">
+                        <span className="px-2 py-0.5 rounded text-[10px] bg-slate-100 text-slate-800">
                           {item.pricing_type}
                         </span>
                       </div>
-                      <p className="text-xs text-sand-200/90 mt-1">{item.tagline}</p>
+                      <p className="text-xs text-slate-800/90 mt-1">{item.tagline}</p>
                       <a
                         href={item.website_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-xs text-electric-300 hover:underline mt-1"
+                        className="inline-flex items-center gap-1 text-xs text-indigo-700 hover:underline mt-1"
                       >
                         <span>{item.website_url}</span>
                         <ExternalLink className="w-3 h-3" />
@@ -327,14 +356,17 @@ export const ModerationPage: React.FC = () => {
                   <div className="flex items-center gap-2 self-end sm:self-start">
                     <button
                       onClick={() => handleApprove(item.id)}
-                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-sm transition-all"
+                      disabled={processingId === item.id || processingId !== null}
+                      aria-label={`Approve ${item.name}`}
+                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-600 disabled:opacity-60 disabled:cursor-wait text-white text-xs font-semibold shadow-sm transition-all"
                     >
                       <Check className="w-3.5 h-3.5" />
-                      <span>Approve</span>
+                      <span>{processingId === item.id ? 'Saving…' : 'Approve'}</span>
                     </button>
                     <button
                       onClick={() => setRejectReasonModal(item.id)}
-                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold transition-all"
+                      disabled={processingId !== null}
+                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-rose-700 hover:bg-rose-600 disabled:opacity-60 text-white text-xs font-semibold transition-all"
                     >
                       <X className="w-3.5 h-3.5" />
                       <span>Reject</span>
@@ -342,7 +374,7 @@ export const ModerationPage: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="pt-2 border-t border-sand-200/10 text-xs text-sand-300/70">
+                <div className="pt-2 border-t border-slate-200 text-xs text-slate-600">
                   <p className="line-clamp-2">{item.description}</p>
                 </div>
               </div>
@@ -355,37 +387,37 @@ export const ModerationPage: React.FC = () => {
       {activeTab === 'reports' && (
         <div className="space-y-4">
           {reports.length === 0 ? (
-            <div className="py-16 text-center border border-dashed border-sand-200/20 rounded-2xl bg-forest-900/20">
-              <ShieldCheck className="w-10 h-10 text-sand-300/40 mx-auto mb-2" />
-              <p className="text-sm font-semibold text-sand-200">No reports submitted</p>
-              <p className="text-xs text-sand-300/60 mt-1">Community reports regarding broken links or abuse will appear here.</p>
+            <div className="py-16 text-center border border-dashed border-slate-200 rounded-2xl bg-slate-50">
+              <ShieldCheck className="w-10 h-10 text-slate-400 mx-auto mb-2" />
+              <p className="text-sm font-semibold text-slate-800">No reports submitted</p>
+              <p className="text-xs text-slate-600 mt-1">Community reports regarding broken links or abuse will appear here.</p>
             </div>
           ) : (
             reports.map((rep) => (
               <div
                 key={rep.id}
-                className="p-5 rounded-2xl bg-forest-900/40 border border-sand-200/15 backdrop-blur-sm space-y-3"
+                className="p-5 rounded-2xl bg-white border border-slate-200 backdrop-blur-sm space-y-3"
               >
                 <div className="flex items-start justify-between">
                   <div>
                     <span className="text-[10px] uppercase font-bold text-rose-400 tracking-wider">Reported Reason:</span>
-                    <h3 className="text-sm font-bold text-sand-100">{rep.reason}</h3>
-                    <p className="text-xs text-sand-300/75 mt-1">{rep.details || 'No additional details provided.'}</p>
+                    <h3 className="text-sm font-bold text-slate-900">{rep.reason}</h3>
+                    <p className="text-xs text-slate-600 mt-1">{rep.details || 'No additional details provided.'}</p>
                   </div>
-                  <span className="text-[11px] text-sand-300/50">
+                  <span className="text-[11px] text-slate-500">
                     {new Date(rep.created_at).toLocaleDateString()}
                   </span>
                 </div>
 
                 {rep.creation && (
-                  <div className="p-3 rounded-xl bg-forest-950/60 border border-sand-200/10 flex items-center justify-between">
+                  <div className="p-3 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-between">
                     <div>
-                      <p className="text-xs font-bold text-sand-100">{rep.creation.name}</p>
-                      <p className="text-[11px] text-sand-300/60">{rep.creation.website_url}</p>
+                      <p className="text-xs font-bold text-slate-900">{rep.creation.name}</p>
+                      <p className="text-[11px] text-slate-600">{rep.creation.website_url}</p>
                     </div>
                     <Link
                       to={`/creations/${rep.creation.slug}`}
-                      className="text-xs font-semibold text-sand-200 hover:text-sand-100"
+                      className="text-xs font-semibold text-slate-800 hover:text-slate-900"
                     >
                       Inspect Item →
                     </Link>
@@ -403,13 +435,13 @@ export const ModerationPage: React.FC = () => {
           {creations.map((item) => (
             <div
               key={item.id}
-              className="p-4 rounded-xl bg-forest-900/40 border border-sand-200/15 flex items-center justify-between gap-4"
+              className="p-4 rounded-xl bg-white border border-slate-200 flex items-center justify-between gap-4"
             >
               <div className="flex items-center gap-3">
                 <img src={item.logo_url} alt={item.name} className="w-10 h-10 rounded-lg object-cover" />
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="font-bold text-sm text-sand-100">{item.name}</span>
+                    <span className="font-bold text-sm text-slate-900">{item.name}</span>
                     <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
                       item.status === 'approved' ? 'bg-emerald-500/20 text-emerald-300' :
                       item.status === 'pending' ? 'bg-amber-500/20 text-amber-300' : 'bg-rose-500/20 text-rose-300'
@@ -417,7 +449,7 @@ export const ModerationPage: React.FC = () => {
                       {item.status}
                     </span>
                   </div>
-                  <p className="text-xs text-sand-300/60 line-clamp-1">{item.tagline}</p>
+                  <p className="text-xs text-slate-600 line-clamp-1">{item.tagline}</p>
                 </div>
               </div>
 
@@ -432,7 +464,7 @@ export const ModerationPage: React.FC = () => {
                 )}
                 <button
                   onClick={() => deleteCreation(item.id)}
-                  className="p-1.5 text-rose-400 hover:text-rose-300 rounded-lg hover:bg-forest-800"
+                  className="p-1.5 text-rose-400 hover:text-rose-300 rounded-lg hover:bg-slate-100"
                   title="Delete creation"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -445,18 +477,18 @@ export const ModerationPage: React.FC = () => {
 
       {/* Reject Reason Modal */}
       {rejectReasonModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-forest-950/80 backdrop-blur-sm">
-          <div className="relative w-full max-w-md rounded-2xl bg-forest-900 border border-sand-200/20 p-6 shadow-glass text-sand-100">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm">
+          <div className="relative w-full max-w-md rounded-2xl bg-white border border-slate-200 p-6 shadow-glass text-slate-900">
             <button
               onClick={() => setRejectReasonModal(null)}
-              className="absolute top-4 right-4 p-1 text-sand-300 hover:text-sand-100"
+              className="absolute top-4 right-4 p-1 text-slate-600 hover:text-slate-900"
             >
               <X className="w-5 h-5" />
             </button>
 
             <form onSubmit={handleRejectSubmit} className="space-y-4">
-              <h3 className="text-base font-bold text-sand-100">Provide Rejection Feedback</h3>
-              <p className="text-xs text-sand-300/70">
+              <h3 className="text-base font-bold text-slate-900">Provide Rejection Feedback</h3>
+              <p className="text-xs text-slate-600">
                 Let the creator know why the creation was rejected so they can revise and re-submit.
               </p>
 
@@ -467,7 +499,7 @@ export const ModerationPage: React.FC = () => {
                   value={rejectionInput}
                   onChange={(e) => setRejectionInput(e.target.value)}
                   placeholder="e.g. Website URL is currently unreachable; please verify DNS."
-                  className="w-full px-3 py-2 bg-forest-950 border border-sand-200/20 rounded-lg text-xs text-sand-100 focus:outline-none focus:ring-1 focus:ring-rose-500"
+                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-rose-500"
                 />
               </div>
 
@@ -475,7 +507,7 @@ export const ModerationPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setRejectReasonModal(null)}
-                  className="px-3 py-1.5 text-xs text-sand-300"
+                  className="px-3 py-1.5 text-xs text-slate-600"
                 >
                   Cancel
                 </button>
