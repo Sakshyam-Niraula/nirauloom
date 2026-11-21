@@ -28,7 +28,7 @@ function getCreatorBadges(joinedAt: string, submitted: number, appreciations: nu
 const badgeStyles = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-semibold';
 function downloadCreatorCertificate(creatorName: string, projectName: string, badgeNames: string[]) {
   const encoder = new TextEncoder();
-  const safe = (value: string) => value.normalize('NFKD').replace(/[^\\x20-\\x7E]/g, '').replace(/\\\\/g, '\\\\\\').replace(/\\(/g, '\\\\(').replace(/\\)/g, '\\\\)');
+  const safe = (value: string) => value.normalize('NFKD').replace(/[^\x20-\x7E]/g, '').replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
   const commands: string[] = [];
   const text = (value: string, size: number, y: number, font = 'F1', color = '0.09 0.25 0.21') => {
     const label = safe(value);
