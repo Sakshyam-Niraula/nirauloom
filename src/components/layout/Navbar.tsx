@@ -32,6 +32,8 @@ export const Navbar: React.FC = () => {
     { label: 'Categories', path: '/categories' },
     { label: 'Collections', path: '/collections' },
     { label: 'Creators', path: '/creators' },
+    { label: 'Creator Rewards', path: '/creator-rewards' },
+    { label: 'Creator Wall', path: '/creator-wall' },
     { label: 'AI Discover', path: '/ai-discover', icon: Sparkles, highlight: true },
   ];
 
