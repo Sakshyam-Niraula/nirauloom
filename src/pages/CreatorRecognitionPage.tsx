@@ -45,7 +45,7 @@ export const CreatorRewardsPage: React.FC = () => {
       <main className="max-w-3xl mx-auto px-4 py-16 text-center">
         <h1 className="text-2xl font-bold text-sand-100">Creator Rewards</h1>
         <p className="text-sand-300/70 mt-2">Sign in to view your creator milestones.</p>
-        <Link to="/auth?mode=signup" className="inline-flex mt-5 px-4 py-2 rounded-xl bg-sand-200 text-forest-950 font-bold text-sm">Sign in / Create account</Link>
+        <Link to="/auth?redirect=%2Fcreator-rewards" className="inline-flex mt-5 px-4 py-2 rounded-xl bg-sand-200 text-forest-950 font-bold text-sm">Sign in / Create account</Link>
       </main>
     );
   }
