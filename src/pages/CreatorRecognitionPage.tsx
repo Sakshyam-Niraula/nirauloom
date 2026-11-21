@@ -28,45 +28,59 @@ function getCreatorBadges(joinedAt: string, submitted: number, appreciations: nu
 const badgeStyles = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-semibold';
 function downloadCreatorCertificate(creatorName: string, projectName: string, badgeNames: string[]) {
   const encoder = new TextEncoder();
-  const safe = (value: string) => value.normalize('NFKD').replace(/[^\x20-\x7E]/g, '').replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
+  const nl = String.fromCharCode(10);
+  const safe = (value: string) => value.normalize('NFKD')
+    .replace(/[^\x20-\x7E]/g, '')
+    .replace(/\\/g, '\\\\')
+    .replace(/\(/g, '\\(')
+    .replace(/\)/g, '\\)');
   const commands: string[] = [];
-  const text = (value: string, size: number, y: number, font = 'F1', color = '0.09 0.25 0.21') => {
+  const drawText = (value: string, size: number, y: number, font = 'F1', color = '0.09 0.25 0.21') => {
     const label = safe(value);
     const estimatedWidth = label.length * size * (font === 'F2' ? 0.52 : 0.48);
     const x = Math.max(40, (842 - estimatedWidth) / 2);
     commands.push(`BT /${font} ${size} Tf ${color} rg 1 0 0 1 ${x.toFixed(2)} ${y} Tm (${label}) Tj ET`);
   };
+
   commands.push('q 0.965 0.941 0.89 rg 0 0 842 595 re f Q');
   commands.push('0.71 0.54 0.27 RG 4 w 22 22 798 551 re S');
   commands.push('0.71 0.54 0.27 RG 1 w 34 34 774 527 re S');
   commands.push('0.71 0.54 0.27 RG 1 w 54 54 m 788 54 l S');
-  text('NIRAULOOM', 18, 520, 'F2', '0.09 0.25 0.21');
-  text('CERTIFICATE OF CREATOR RECOGNITION', 13, 476, 'F1', '0.36 0.32 0.24');
-  text(creatorName, 34, 405, 'F2', '0.09 0.25 0.21');
-  text('In recognition of submitting original work to NIRAULOOM.', 15, 355, 'F1', '0.20 0.25 0.22');
-  text('PROJECT SUBMITTED', 9, 300, 'F1', '0.45 0.37 0.24');
-  text(projectName, 17, 272, 'F2', '0.09 0.25 0.21');
-  if (badgeNames.length) text('EARNED RECOGNITION: ' + badgeNames.join('  |  '), 11, 224, 'F1', '0.36 0.32 0.24');
+  drawText('NIRAULOOM', 18, 520, 'F2');
+  drawText('CERTIFICATE OF CREATOR RECOGNITION', 13, 476, 'F1', '0.36 0.32 0.24');
+  drawText(creatorName, 34, 405, 'F2');
+  drawText('In recognition of submitting original work to NIRAULOOM.', 15, 355, 'F1', '0.20 0.25 0.22');
+  drawText('PROJECT SUBMITTED', 9, 300, 'F1', '0.45 0.37 0.24');
+  drawText(projectName, 17, 272, 'F2');
+  if (badgeNames.length) drawText('EARNED RECOGNITION: ' + badgeNames.join('  |  '), 11, 224, 'F1', '0.36 0.32 0.24');
   commands.push('0.09 0.25 0.21 RG 1 w 320 118 m 522 118 l S');
-  text('Sakshyam Niraula', 16, 91, 'F2', '0.09 0.25 0.21');
-  text('Founder of NIRAULOOM', 11, 69, 'F1', '0.36 0.32 0.24');
-  const stream = commands.join('\\n');
+  drawText('Sakshyam Niraula', 16, 91, 'F2');
+  drawText('Founder of NIRAULOOM', 11, 69, 'F1', '0.36 0.32 0.24');
+
+  const stream = commands.join(nl);
   const objects = [
     '<< /Type /Catalog /Pages 2 0 R >>',
     '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
     '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 842 595] /Resources << /Font << /F1 4 0 R /F2 5 0 R >> >> /Contents 6 0 R >>',
     '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>',
     '<< /Type /Font /Subtype /Type1 /BaseFont /Times-Bold >>',
-    `<< /Length ${encoder.encode(stream).length} >>\\nstream\\n${stream}\\nendstream`
+    `<< /Length ${encoder.encode(stream).length} >>${nl}stream${nl}${stream}${nl}endstream`
   ];
-  let pdf = '%PDF-1.4\\n';
+
+  let pdf = '%PDF-1.4' + nl;
   const offsets = [0];
-  objects.forEach((object, index) => { offsets.push(encoder.encode(pdf).length); pdf += `${index + 1} 0 obj\\n${object}\\nendobj\\n`; });
+  objects.forEach((object, index) => {
+    offsets.push(encoder.encode(pdf).length);
+    pdf += `${index + 1} 0 obj${nl}${object}${nl}endobj${nl}`;
+  });
   const xrefOffset = encoder.encode(pdf).length;
-  pdf += `xref\\n0 ${objects.length + 1}\\n0000000000 65535 f \\n`;
-  offsets.slice(1).forEach((offset) => { pdf += `${String(offset).padStart(10, '0')} 00000 n \\n`; });
-  pdf += `trailer\\n<< /Size ${objects.length + 1} /Root 1 0 R >>\\nstartxref\\n${xrefOffset}\\n%%EOF`;
-  const blob = new Blob([pdf], { type: 'application/pdf' });
+  pdf += `xref${nl}0 ${objects.length + 1}${nl}0000000000 65535 f ${nl}`;
+  offsets.slice(1).forEach((offset) => {
+    pdf += `${String(offset).padStart(10, '0')} 00000 n ${nl}`;
+  });
+  pdf += `trailer${nl}<< /Size ${objects.length + 1} /Root 1 0 R >>${nl}startxref${nl}${xrefOffset}${nl}%%EOF${nl}`;
+
+  const blob = new Blob([encoder.encode(pdf)], { type: 'application/pdf' });
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement('a');
   const filename = creatorName.trim().replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '') || 'Creator';
@@ -75,9 +89,8 @@ function downloadCreatorCertificate(creatorName: string, projectName: string, ba
   document.body.appendChild(anchor);
   anchor.click();
   anchor.remove();
-  window.setTimeout(() => URL.revokeObjectURL(url), 10000);
+  window.setTimeout(() => URL.revokeObjectURL(url), 30000);
 }
-
 
 export const CreatorRewardsPage: React.FC = () => {
   const { user, loading: authLoading } = useAuth();
