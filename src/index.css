@@ -348,3 +348,28 @@ header a, header button, header input { text-shadow:none; }
   border-color: rgba(49, 54, 110, .12);
   color: #292d45;
 }
+
+/* Contrast pass: legacy opacity-suffixed text utilities on the light porcelain theme.
+   Attribute selectors match Tailwind's literal class tokens, including /40, /60, /70, /80 and /90. */
+[class*="text-sand-50/"],
+[class*="text-sand-100/"],
+[class*="text-sand-200/"],
+[class*="text-sand-300/"],
+[class*="text-sand-400/"],
+[class*="text-sand-500/"] {
+  color: #45495f !important;
+}
+[class*="text-electric-300/"],
+[class*="text-electric-400/"] {
+  color: #a83d30 !important;
+}
+[class*="text-forest-400/"],
+[class*="text-forest-500/"],
+[class*="text-forest-600/"] {
+  color: #3944a8 !important;
+}
+[class*="placeholder-sand-300/"]::placeholder,
+[class*="placeholder-sand-400/"]::placeholder {
+  color: #656a7e !important;
+  opacity: 1 !important;
+}
