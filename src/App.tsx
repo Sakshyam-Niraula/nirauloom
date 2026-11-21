@@ -24,6 +24,7 @@ import { CommunityPage } from './pages/CommunityPage';
 import { GrowthScoutPage } from './pages/GrowthScoutPage';
 import { OutreachAgentPage } from './pages/OutreachAgentPage';
 import { ConversionAnalyticsPage } from './pages/ConversionAnalyticsPage';
+import { CreatorRewardsPage, CreatorWallPage } from './pages/CreatorRecognitionPage';
 
 export function App() {
   return (
@@ -41,6 +42,8 @@ export function App() {
               <Route path="/collections/:slug" element={<CollectionDetailPage />} />
               <Route path="/creators" element={<CreatorsPage />} />
               <Route path="/creators/:username" element={<CreatorProfilePage />} />
+              <Route path="/creator-rewards" element={<CreatorRewardsPage />} />
+              <Route path="/creator-wall" element={<CreatorWallPage />} />
               
               {/* Protected Authenticated Routes */}
               <Route 
