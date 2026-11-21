@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Award, Crown, Sparkles, Star, Users, Printer, ArrowRight, Loader2 } from 'lucide-react';
+import { Award, Crown, Sparkles, Star, Users, Printer, Download, ArrowRight, Loader2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { usePlatform } from '../context/PlatformContext';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
@@ -26,6 +26,58 @@ function getCreatorBadges(joinedAt: string, submitted: number, appreciations: nu
 }
 
 const badgeStyles = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-semibold';
+function downloadCreatorCertificate(creatorName: string, projectName: string, badgeNames: string[]) {
+  const encoder = new TextEncoder();
+  const safe = (value: string) => value.normalize('NFKD').replace(/[^\\x20-\\x7E]/g, '').replace(/\\\\/g, '\\\\\\').replace(/\\(/g, '\\\\(').replace(/\\)/g, '\\\\)');
+  const commands: string[] = [];
+  const text = (value: string, size: number, y: number, font = 'F1', color = '0.09 0.25 0.21') => {
+    const label = safe(value);
+    const estimatedWidth = label.length * size * (font === 'F2' ? 0.52 : 0.48);
+    const x = Math.max(40, (842 - estimatedWidth) / 2);
+    commands.push(`BT /${font} ${size} Tf ${color} rg 1 0 0 1 ${x.toFixed(2)} ${y} Tm (${label}) Tj ET`);
+  };
+  commands.push('q 0.965 0.941 0.89 rg 0 0 842 595 re f Q');
+  commands.push('0.71 0.54 0.27 RG 4 w 22 22 798 551 re S');
+  commands.push('0.71 0.54 0.27 RG 1 w 34 34 774 527 re S');
+  commands.push('0.71 0.54 0.27 RG 1 w 54 54 m 788 54 l S');
+  text('NIRAULOOM', 18, 520, 'F2', '0.09 0.25 0.21');
+  text('CERTIFICATE OF CREATOR RECOGNITION', 13, 476, 'F1', '0.36 0.32 0.24');
+  text(creatorName, 34, 405, 'F2', '0.09 0.25 0.21');
+  text('In recognition of submitting original work to NIRAULOOM.', 15, 355, 'F1', '0.20 0.25 0.22');
+  text('PROJECT SUBMITTED', 9, 300, 'F1', '0.45 0.37 0.24');
+  text(projectName, 17, 272, 'F2', '0.09 0.25 0.21');
+  if (badgeNames.length) text('EARNED RECOGNITION: ' + badgeNames.join('  |  '), 11, 224, 'F1', '0.36 0.32 0.24');
+  commands.push('0.09 0.25 0.21 RG 1 w 320 118 m 522 118 l S');
+  text('Sakshyam Niraula', 16, 91, 'F2', '0.09 0.25 0.21');
+  text('Founder of NIRAULOOM', 11, 69, 'F1', '0.36 0.32 0.24');
+  const stream = commands.join('\\n');
+  const objects = [
+    '<< /Type /Catalog /Pages 2 0 R >>',
+    '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 842 595] /Resources << /Font << /F1 4 0 R /F2 5 0 R >> >> /Contents 6 0 R >>',
+    '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>',
+    '<< /Type /Font /Subtype /Type1 /BaseFont /Times-Bold >>',
+    `<< /Length ${encoder.encode(stream).length} >>\\nstream\\n${stream}\\nendstream`
+  ];
+  let pdf = '%PDF-1.4\\n';
+  const offsets = [0];
+  objects.forEach((object, index) => { offsets.push(encoder.encode(pdf).length); pdf += `${index + 1} 0 obj\\n${object}\\nendobj\\n`; });
+  const xrefOffset = encoder.encode(pdf).length;
+  pdf += `xref\\n0 ${objects.length + 1}\\n0000000000 65535 f \\n`;
+  offsets.slice(1).forEach((offset) => { pdf += `${String(offset).padStart(10, '0')} 00000 n \\n`; });
+  pdf += `trailer\\n<< /Size ${objects.length + 1} /Root 1 0 R >>\\nstartxref\\n${xrefOffset}\\n%%EOF`;
+  const blob = new Blob([pdf], { type: 'application/pdf' });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  const filename = creatorName.trim().replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '') || 'Creator';
+  anchor.href = url;
+  anchor.download = `NIRAULOOM-Creator-Certificate-${filename}.pdf`;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 10000);
+}
+
 
 export const CreatorRewardsPage: React.FC = () => {
   const { user, loading: authLoading } = useAuth();
@@ -82,7 +134,6 @@ export const CreatorRewardsPage: React.FC = () => {
   const totalAppreciations = approved.reduce((sum, project) => sum + (project.appreciations_count || 0), 0);
   const badges = getCreatorBadges(user.created_at || new Date().toISOString(), submitted, totalAppreciations);
   const firstProject = projects[0];
-  const issueDate = new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
   const nextMilestone = submitted === 0
     ? 'Submit your first project to unlock First Build and your certificate.'
     : submitted < 3
@@ -99,7 +150,7 @@ export const CreatorRewardsPage: React.FC = () => {
             <h1 className="text-3xl font-extrabold text-sand-100 mt-2">Creator Rewards</h1>
             <p className="text-sm text-sand-300/70 mt-2 max-w-xl">A record of the projects you have submitted and the milestones you have earned at NIRAULOOM.</p>
           </div>
-          <Link to={user.username ? '/creators/' + user.username : '/creators'} className="text-sm font-semibold text-sand-200 hover:text-white inline-flex items-center gap-2">View public profile <ArrowRight className="w-4 h-4" /></Link>
+          <Link to={user.username ? '/creators/' + user.username : '/creators'} className="text-sm font-semibold text-sand-200 hover:text-sand-600 inline-flex items-center gap-2">View public profile <ArrowRight className="w-4 h-4" /></Link>
         </header>
 
         <section className="rounded-3xl border border-sand-200/15 bg-forest-900/45 p-6 sm:p-8">
@@ -144,9 +195,12 @@ export const CreatorRewardsPage: React.FC = () => {
           <article className="rounded-2xl border border-sand-200/15 bg-forest-900/35 p-5">
             <h3 className="font-bold text-sand-100">Your certificate</h3>
             <p className="mt-2 text-sm text-sand-300/75">A free certificate becomes available after your first project submission. Pending submissions count; creating an account alone does not earn one.</p>
-            {submitted > 0 && !projectsLoading && !loadError
-              ? <button onClick={() => window.print()} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-sand-200 px-4 py-2.5 text-sm font-bold text-forest-950"><Printer className="w-4 h-4" />Save certificate as PDF</button>
-              : <p className="mt-4 text-xs text-sand-300/60">{projectsLoading ? 'Checking eligibility…' : 'Submit your first project to unlock your certificate.'}</p>}
+            {submitted > 0 && !projectsLoading && !loadError ? (
+              <div className="mt-4 flex flex-wrap gap-2">
+                <button onClick={() => downloadCreatorCertificate(user.display_name, firstProject?.name || 'NIRAULOOM project', badges.map((badge) => badge.name))} className="inline-flex items-center gap-2 rounded-xl bg-forest-800 px-4 py-2.5 text-sm font-bold text-white hover:bg-forest-700"><Download className="w-4 h-4" />Download certificate PDF</button>
+                <button onClick={() => window.print()} className="inline-flex items-center gap-2 rounded-xl border border-sand-300 px-4 py-2.5 text-sm font-semibold text-sand-600"><Printer className="w-4 h-4" />Print certificate</button>
+              </div>
+            ) : <p className="mt-4 text-xs text-sand-300/60">{projectsLoading ? 'Checking eligibility…' : 'Submit your first project to unlock your certificate.'}</p>}
           </article>
         </section>
 
@@ -169,12 +223,12 @@ export const CreatorRewardsPage: React.FC = () => {
             <div className="my-5 text-[#b68b45] text-3xl">✦</div>
             <p className="uppercase tracking-[0.28em] text-sm">Certificate of Creator Recognition</p>
             <h1 className="font-serif text-5xl md:text-6xl mt-7">{user.display_name}</h1>
-            <p className="text-lg mt-7 max-w-3xl mx-auto">In recognition of submitting original work and contributing to the NIRAULOOM creator community.</p>
+            <p className="text-lg mt-7 max-w-3xl mx-auto">In recognition of submitting original work to NIRAULOOM.</p>
             <p className="text-base mt-4 font-semibold">{firstProject?.name}</p>
             <div className="flex flex-wrap justify-center gap-2 mt-7">{badges.map((badge) => <span key={badge.name} className="border border-[#b68b45] rounded-full px-4 py-1.5 text-sm">{badge.name}</span>)}</div>
-            <div className="grid grid-cols-2 gap-8 mt-12 text-sm">
-              <div><div className="border-t border-[#173f35] pt-2">{issueDate}</div><span className="text-xs uppercase tracking-wider">Date issued</span></div>
-              <div><div className="border-t border-[#173f35] pt-2">NIRAULOOM</div><span className="text-xs uppercase tracking-wider">Creator community</span></div>
+            <div className="mt-12 pt-5 border-t border-[#173f35]/40">
+              <p className="font-serif text-xl font-bold">Sakshyam Niraula</p>
+              <p className="text-xs uppercase tracking-[0.18em] mt-1">Founder of NIRAULOOM</p>
             </div>
           </div>
         </section>
