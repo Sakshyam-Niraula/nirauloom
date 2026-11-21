@@ -76,7 +76,8 @@ export const AuthPage: React.FC = () => {
   const handleOAuth = async (provider: 'google' | 'github') => {
     setErrorMsg('');
     setLoading(true);
-    const res = await signInWithOAuth(provider);
+    const callbackUrl = `${window.location.origin}/auth/callback?redirect=${encodeURIComponent(safeRedirect || '/dashboard')}`;
+    const res = await signInWithOAuth(provider, callbackUrl);
     setLoading(false);
     if (res.error) {
       setErrorMsg(res.error);
