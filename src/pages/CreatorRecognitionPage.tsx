@@ -53,7 +53,6 @@ function downloadCreatorCertificate(creatorName: string, projectName: string, ba
   drawText('PROJECT SUBMITTED', 9, 300, 'F1', '0.45 0.37 0.24');
   drawText(projectName, 17, 272, 'F2');
   if (badgeNames.length) drawText('EARNED RECOGNITION: ' + badgeNames.join('  |  '), 11, 224, 'F1', '0.36 0.32 0.24');
-  commands.push('0.09 0.25 0.21 RG 1 w 320 118 m 522 118 l S');
   drawText('Sakshyam Niraula', 16, 91, 'F2');
   drawText('Founder of NIRAULOOM', 11, 69, 'F1', '0.36 0.32 0.24');
 
