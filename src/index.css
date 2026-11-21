@@ -359,6 +359,14 @@ header a, header button, header input { text-shadow:none; }
 [class*="text-sand-500/"] {
   color: #45495f !important;
 }
+[class*="text-gray-400/"],
+[class*="text-gray-500/"],
+[class*="text-slate-400/"],
+[class*="text-slate-500/"],
+[class*="text-zinc-400/"],
+[class*="text-zinc-500/"] {
+  color: #55596d !important;
+}
 [class*="text-electric-300/"],
 [class*="text-electric-400/"] {
   color: #a83d30 !important;
