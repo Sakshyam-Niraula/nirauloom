@@ -28,96 +28,157 @@ function getCreatorBadges(joinedAt: string, submitted: number, appreciations: nu
 const badgeStyles = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-semibold';
 
 export const CreatorRewardsPage: React.FC = () => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { creations } = usePlatform();
-  const own = creations.filter((creation) => creation.creator_id === user?.id && ['pending', 'approved'].includes(creation.status));
-  const approvedOwn = own.filter((creation) => creation.status === 'approved');
-  const totalAppreciations = approvedOwn.reduce((sum, creation) => sum + (creation.appreciations_count || 0), 0);
-  const badges = getCreatorBadges(user?.created_at || new Date().toISOString(), own.length, totalAppreciations);
-  const nextMilestone = own.length === 0
-    ? 'Submit your first project to unlock First Build and become eligible for Early Pioneer.'
-    : own.length < 3
-      ? 'Submit 2 more projects to unlock Project Builder.'
-      : 'You have reached Project Builder. Keep creating—your milestones are recorded here.';
+  const [projects, setProjects] = useState<Array<{ id: string; name: string; status: string; appreciations_count: number; created_at: string }>>([]);
+  const [projectsLoading, setProjectsLoading] = useState(false);
+  const [loadError, setLoadError] = useState('');
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  if (!user) {
-    return (
-      <main className="max-w-3xl mx-auto px-4 py-16 text-center">
-        <h1 className="text-2xl font-bold text-sand-100">Creator Rewards</h1>
-        <p className="text-sand-300/70 mt-2">Sign in to view your creator milestones.</p>
-        <Link to="/auth?redirect=%2Fcreator-rewards" className="inline-flex mt-5 px-4 py-2 rounded-xl bg-sand-200 text-forest-950 font-bold text-sm">Sign in / Create account</Link>
-      </main>
-    );
-  }
+  useEffect(() => {
+    let active = true;
+    async function loadProjects() {
+      if (!user?.id) return;
+      setProjectsLoading(true);
+      setLoadError('');
+      if (isSupabaseConfigured && supabase) {
+        const { data, error } = await supabase.from('creations')
+          .select('id,name,status,appreciations_count,created_at')
+          .eq('creator_id', user.id)
+          .in('status', ['pending', 'approved'])
+          .order('created_at', { ascending: true });
+        if (!active) return;
+        if (error) {
+          setLoadError('We could not load your submissions from NIRAULOOM. Please refresh and try again.');
+          setProjects([]);
+        } else {
+          setProjects((data || []) as Array<{ id: string; name: string; status: string; appreciations_count: number; created_at: string }>);
+        }
+      } else {
+        const own = creations.filter((creation) => creation.creator_id === user.id && ['pending', 'approved'].includes(creation.status))
+          .map((creation) => ({ id: creation.id, name: creation.name, status: creation.status, appreciations_count: creation.appreciations_count || 0, created_at: creation.created_at }))
+          .sort((a, b) => a.created_at.localeCompare(b.created_at));
+        if (active) setProjects(own);
+      }
+      if (active) setProjectsLoading(false);
+    }
+    void loadProjects();
+    return () => { active = false; };
+  }, [user?.id, creations, refreshKey]);
+
+  if (authLoading) return <main className="max-w-3xl mx-auto px-4 py-24 text-center text-sand-200"><Loader2 className="w-7 h-7 animate-spin mx-auto mb-3" />Checking your NIRAULOOM account…</main>;
+
+  if (!user) return (
+    <main className="max-w-3xl mx-auto px-4 py-16 text-center">
+      <Award className="w-10 h-10 mx-auto text-amber-300" />
+      <h1 className="text-3xl font-bold text-sand-100 mt-4">Creator Rewards</h1>
+      <p className="text-sand-300/70 mt-2">Sign in to see the projects you submitted, your earned badges, and your certificate.</p>
+      <Link to="/auth?redirect=%2Fcreator-rewards" className="inline-flex mt-6 px-5 py-3 rounded-xl bg-sand-200 text-forest-950 font-bold text-sm">Sign in to view rewards</Link>
+    </main>
+  );
+
+  const submitted = projects.length;
+  const approved = projects.filter((project) => project.status === 'approved');
+  const totalAppreciations = approved.reduce((sum, project) => sum + (project.appreciations_count || 0), 0);
+  const badges = getCreatorBadges(user.created_at || new Date().toISOString(), submitted, totalAppreciations);
+  const firstProject = projects[0];
+  const issueDate = new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+  const nextMilestone = submitted === 0
+    ? 'Submit your first project to unlock First Build and your certificate.'
+    : submitted < 3
+      ? 'Submit ' + (3 - submitted) + ' more project' + (3 - submitted === 1 ? '' : 's') + ' to unlock Project Builder.'
+      : 'You have reached Project Builder. Keep creating—your milestones are recorded here.';
 
   return (
     <main className="max-w-5xl mx-auto px-4 sm:px-6 py-10 space-y-7">
-      <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-sand-200/10 pb-6">
-        <div>
-          <p className="text-[11px] uppercase tracking-[0.2em] text-electric-400 font-bold">Recognition for your work</p>
-          <h1 className="text-3xl font-extrabold text-sand-100 mt-2">Creator Rewards</h1>
-          <p className="text-sm text-sand-300/70 mt-2 max-w-xl">Your work matters here. Track your milestones and keep a record of what you have built with NIRAULOOM.</p>
-        </div>
-        <Link to={`/creators/${user.username}`} className="text-sm font-semibold text-sand-200 hover:text-white inline-flex items-center gap-2">View public profile <ArrowRight className="w-4 h-4" /></Link>
-      </header>
+      <style>{"@media print {@page {size:A4 landscape;margin:10mm} body * {visibility:hidden!important} #nirauloom-creator-certificate,#nirauloom-creator-certificate * {visibility:visible!important} #nirauloom-creator-certificate {display:flex!important;position:fixed!important;inset:0!important;width:100%!important;height:100%!important;margin:0!important;box-sizing:border-box!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}}"}</style>
+      <div className="creator-rewards-screen space-y-7">
+        <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-sand-200/10 pb-6">
+          <div>
+            <p className="text-[11px] uppercase tracking-[0.2em] text-electric-400 font-bold">Recognition for your work</p>
+            <h1 className="text-3xl font-extrabold text-sand-100 mt-2">Creator Rewards</h1>
+            <p className="text-sm text-sand-300/70 mt-2 max-w-xl">A record of the projects you have submitted and the milestones you have earned at NIRAULOOM.</p>
+          </div>
+          <Link to={user.username ? '/creators/' + user.username : '/creators'} className="text-sm font-semibold text-sand-200 hover:text-white inline-flex items-center gap-2">View public profile <ArrowRight className="w-4 h-4" /></Link>
+        </header>
 
-      <section className="rounded-3xl border border-sand-200/15 bg-forest-900/45 p-6 sm:p-8">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-5">
-          <img src={user.avatar_url || `https://api.dicebear.com/7.x/identicon/svg?seed=${user.id}`} alt="" className="w-20 h-20 rounded-full border border-sand-200/20" />
-          <div className="flex-1">
-            <p className="text-xs uppercase tracking-wider text-sand-300/60">Creator journey</p>
-            <h2 className="text-2xl font-bold text-sand-100">{user.display_name}</h2>
-            <p className="text-sm text-sand-300/70">@{user.username} · {own.length} submitted {own.length === 1 ? 'project' : 'projects'}</p>
-          </div>
-          <div className="flex gap-3">
-            <div className="rounded-xl bg-forest-950/60 p-3 text-center min-w-20"><strong className="block text-xl text-sand-100">{own.length}</strong><span className="text-[10px] text-sand-300/60 uppercase">Submitted</span></div>
-            <div className="rounded-xl bg-forest-950/60 p-3 text-center min-w-20"><strong className="block text-xl text-sand-100">{totalAppreciations}</strong><span className="text-[10px] text-sand-300/60 uppercase">Appreciations</span></div>
-          </div>
-        </div>
-        <div className="mt-6 pt-5 border-t border-sand-200/10">
-          <h3 className="font-bold text-sand-100 mb-3">Your earned badges</h3>
-          {badges.length > 0 ? (
-            <div className="flex flex-wrap gap-2">
-              {badges.map((badge) => <span key={badge.name} className={badgeStyles + ' ' + badge.tone} title={badge.description}>{badge.icon}{badge.name}</span>)}
+        <section className="rounded-3xl border border-sand-200/15 bg-forest-900/45 p-6 sm:p-8">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-5">
+            <img src={user.avatar_url || 'https://api.dicebear.com/7.x/identicon/svg?seed=' + user.id} alt="" className="w-20 h-20 rounded-full border border-sand-200/20" />
+            <div className="flex-1">
+              <p className="text-xs uppercase tracking-wider text-sand-300/60">Creator journey</p>
+              <h2 className="text-2xl font-bold text-sand-100">{user.display_name}</h2>
+              <p className="text-sm text-sand-300/70">@{user.username || 'creator'} · {submitted} submitted {submitted === 1 ? 'project' : 'projects'}</p>
             </div>
+            <div className="flex gap-3">
+              <div className="rounded-xl bg-forest-950/60 p-3 text-center min-w-20"><strong className="block text-xl text-sand-100">{submitted}</strong><span className="text-[10px] text-sand-300/60 uppercase">Submitted</span></div>
+              <div className="rounded-xl bg-forest-950/60 p-3 text-center min-w-20"><strong className="block text-xl text-sand-100">{totalAppreciations}</strong><span className="text-[10px] text-sand-300/60 uppercase">Appreciations</span></div>
+            </div>
+          </div>
+          {loadError ? (
+            <div className="mt-6 rounded-xl border border-rose-400/30 bg-rose-500/10 p-4 text-sm text-rose-200">{loadError}<button onClick={() => setRefreshKey((value) => value + 1)} className="ml-3 underline font-semibold">Try again</button></div>
+          ) : projectsLoading ? (
+            <div className="mt-6 text-sm text-sand-300/70 flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin" />Loading your submitted projects…</div>
           ) : (
-            <p className="text-sm text-sand-300/65">Your first badge is waiting for your first project submission.</p>
+            <div className="mt-6 pt-5 border-t border-sand-200/10">
+              <h3 className="font-bold text-sand-100 mb-3">Your earned badges</h3>
+              {badges.length > 0 ? <div className="flex flex-wrap gap-2">{badges.map((badge) => <span key={badge.name} className={badgeStyles + ' ' + badge.tone} title={badge.description}>{badge.icon}{badge.name}</span>)}</div> : <p className="text-sm text-sand-300/65">Your first badge is waiting for your first project submission.</p>}
+              <p className="text-sm text-sand-300/70 mt-4">{nextMilestone}</p>
+            </div>
           )}
-          <p className="text-sm text-sand-300/70 mt-4">{nextMilestone}</p>
-        </div>
-      </section>
+        </section>
 
-      <section className="grid md:grid-cols-2 gap-4">
-        <article className="rounded-2xl border border-sand-200/15 bg-forest-900/35 p-5">
-          <h3 className="font-bold text-sand-100">Milestones</h3>
-          <ul className="mt-3 space-y-2 text-sm text-sand-300/75">
-            <li>First Build — 1 submitted project</li>
-            <li>Project Builder — 3 submitted projects</li>
-            <li>Community Favorite — 5 appreciations</li>
+        <section className="grid md:grid-cols-2 gap-4">
+          <article className="rounded-2xl border border-sand-200/15 bg-forest-900/35 p-5">
+            <h3 className="font-bold text-sand-100">Your submissions</h3>
+            {projectsLoading ? <p className="mt-3 text-sm text-sand-300/70">Loading…</p> : projects.length ? (
+              <ul className="mt-3 space-y-3">{projects.map((project) => (
+                <li key={project.id} className="flex items-start justify-between gap-3 text-sm">
+                  <span className="text-sand-100 font-medium">{project.name}</span>
+                  <span className={'shrink-0 rounded-full px-2 py-1 text-[10px] font-semibold ' + (project.status === 'approved' ? 'bg-emerald-500/15 text-emerald-300' : 'bg-amber-500/15 text-amber-200')}>{project.status === 'approved' ? 'Published' : 'Under review'}</span>
+                </li>
+              ))}</ul>
+            ) : <p className="mt-3 text-sm text-sand-300/70">No submissions are linked to this account yet. If you submitted with another account, sign in using that account.</p>}
+            <Link to="/submit" className="inline-flex items-center gap-2 mt-4 text-sm text-sand-200 font-semibold">Submit another project <ArrowRight className="w-4 h-4" /></Link>
+          </article>
+          <article className="rounded-2xl border border-sand-200/15 bg-forest-900/35 p-5">
+            <h3 className="font-bold text-sand-100">Your certificate</h3>
+            <p className="mt-2 text-sm text-sand-300/75">A free certificate becomes available after your first project submission. Pending submissions count; creating an account alone does not earn one.</p>
+            {submitted > 0 && !projectsLoading && !loadError
+              ? <button onClick={() => window.print()} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-sand-200 px-4 py-2.5 text-sm font-bold text-forest-950"><Printer className="w-4 h-4" />Save certificate as PDF</button>
+              : <p className="mt-4 text-xs text-sand-300/60">{projectsLoading ? 'Checking eligibility…' : 'Submit your first project to unlock your certificate.'}</p>}
+          </article>
+        </section>
+
+        <section className="rounded-2xl border border-dashed border-sand-200/20 p-5">
+          <h3 className="font-bold text-sand-100">How rewards work</h3>
+          <ul className="mt-2 space-y-1 text-sm text-sand-300/70">
+            <li>First Build — 1 submitted project.</li>
+            <li>Early Pioneer — submitted at least one project during the launch period.</li>
+            <li>Project Builder — 3 submitted projects.</li>
+            <li>Community Favorite — 5 appreciations on published projects.</li>
           </ul>
-        </article>
-        <article className="rounded-2xl border border-sand-200/15 bg-forest-900/35 p-5">
-          <h3 className="font-bold text-sand-100">Share your recognition</h3>
-          <p className="mt-2 text-sm text-sand-300/75">After you submit a project, you can print or save this certificate as a PDF to celebrate contributing to NIRAULOOM—no paid upgrade required.</p>
-          {own.length > 0 ? <button onClick={() => window.print()} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-sand-200 px-4 py-2 text-sm font-bold text-forest-950"><Printer className="w-4 h-4" /> Save certificate / Print</button> : <p className="mt-4 text-xs text-sand-300/60">Submit your first project to unlock your certificate.</p>}
-        </article>
-      </section>
+          <Link to="/creator-wall" className="inline-flex items-center gap-2 mt-3 text-sm text-sand-200 font-semibold">Meet the Creator Wall <ArrowRight className="w-4 h-4" /></Link>
+        </section>
+      </div>
 
-      {own.length > 0 && <section className="print-certificate hidden print:block border-2 border-emerald-900 p-12 text-center text-slate-900">
-        <p className="uppercase tracking-[0.3em] text-sm">NIRAULOOM · Creator Recognition</p>
-        <h1 className="text-4xl font-serif mt-8">Creator Appreciation</h1>
-        <p className="mt-6 text-lg">This certificate recognizes</p>
-        <h2 className="text-3xl font-bold mt-3">{user.display_name}</h2>
-        <p className="mt-6 text-lg">for submitting a project and contributing creativity to the NIRAULOOM community.</p>
-        <div className="mt-8 flex flex-wrap justify-center gap-2">{badges.map((badge) => <span key={badge.name} className="border border-emerald-900 px-3 py-1 rounded-full text-sm">{badge.name}</span>)}</div>
-        <p className="mt-10 text-sm">Discover. Build. Connect.</p>
-      </section>}
-
-      <section className="rounded-2xl border border-dashed border-sand-200/20 p-5">
-        <h3 className="font-bold text-sand-100">Coming next</h3>
-        <p className="text-sm text-sand-300/70 mt-1">Creator spotlights, referral recognition, and community contribution badges will be introduced with transparent criteria as those systems become available.</p>
-        <Link to="/creator-wall" className="inline-flex items-center gap-2 mt-3 text-sm text-sand-200 font-semibold">Meet the Creator Wall <ArrowRight className="w-4 h-4" /></Link>
-      </section>
+      {submitted > 0 && !projectsLoading && !loadError && (
+        <section id="nirauloom-creator-certificate" className="hidden flex-col justify-between overflow-hidden bg-[#f6f0e3] text-[#173f35] border-[10px] border-double border-[#b68b45] p-10 md:p-14 text-center min-h-[185mm]">
+          <div className="border border-[#b68b45] p-8 md:p-10 flex-1 flex flex-col justify-center">
+            <p className="uppercase tracking-[0.35em] text-xs font-semibold">NIRAULOOM · DISCOVER. BUILD. CONNECT.</p>
+            <div className="my-5 text-[#b68b45] text-3xl">✦</div>
+            <p className="uppercase tracking-[0.28em] text-sm">Certificate of Creator Recognition</p>
+            <h1 className="font-serif text-5xl md:text-6xl mt-7">{user.display_name}</h1>
+            <p className="text-lg mt-7 max-w-3xl mx-auto">In recognition of submitting original work and contributing to the NIRAULOOM creator community.</p>
+            <p className="text-base mt-4 font-semibold">{firstProject?.name}</p>
+            <div className="flex flex-wrap justify-center gap-2 mt-7">{badges.map((badge) => <span key={badge.name} className="border border-[#b68b45] rounded-full px-4 py-1.5 text-sm">{badge.name}</span>)}</div>
+            <div className="grid grid-cols-2 gap-8 mt-12 text-sm">
+              <div><div className="border-t border-[#173f35] pt-2">{issueDate}</div><span className="text-xs uppercase tracking-wider">Date issued</span></div>
+              <div><div className="border-t border-[#173f35] pt-2">NIRAULOOM</div><span className="text-xs uppercase tracking-wider">Creator community</span></div>
+            </div>
+          </div>
+        </section>
+      )}
     </main>
   );
 };
