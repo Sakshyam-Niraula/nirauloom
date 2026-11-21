@@ -16,11 +16,11 @@ type WallCreator = {
 
 type BadgeInfo = { name: string; description: string; icon: React.ReactNode; tone: string };
 
-function getCreatorBadges(joinedAt: string, published: number, appreciations: number): BadgeInfo[] {
+function getCreatorBadges(joinedAt: string, submitted: number, appreciations: number): BadgeInfo[] {
   const badges: BadgeInfo[] = [];
-  if (published >= 1) badges.push({ name: 'First Build', description: 'Published a project on NIRAULOOM', icon: <Sparkles className="w-4 h-4" />, tone: 'border-emerald-300/30 bg-emerald-500/10 text-emerald-300' });
-  if (published >= 1 && new Date(joinedAt) <= new Date('2026-12-31T23:59:59Z')) badges.push({ name: 'Early Pioneer', description: 'Joined during NIRAULOOM’s early launch era', icon: <Crown className="w-4 h-4" />, tone: 'border-amber-300/30 bg-amber-500/10 text-amber-300' });
-  if (published >= 3) badges.push({ name: 'Project Builder', description: 'Published 3 or more projects', icon: <Award className="w-4 h-4" />, tone: 'border-sky-300/30 bg-sky-500/10 text-sky-300' });
+  if (submitted >= 1) badges.push({ name: 'First Build', description: 'Submitted their first project to NIRAULOOM', icon: <Sparkles className="w-4 h-4" />, tone: 'border-emerald-300/30 bg-emerald-500/10 text-emerald-300' });
+  if (submitted >= 1 && new Date(joinedAt) <= new Date('2026-12-31T23:59:59Z')) badges.push({ name: 'Early Pioneer', description: 'Joined during NIRAULOOM’s early launch era', icon: <Crown className="w-4 h-4" />, tone: 'border-amber-300/30 bg-amber-500/10 text-amber-300' });
+  if (submitted >= 3) badges.push({ name: 'Project Builder', description: 'Submitted 3 or more projects', icon: <Award className="w-4 h-4" />, tone: 'border-sky-300/30 bg-sky-500/10 text-sky-300' });
   if (appreciations >= 5) badges.push({ name: 'Community Favorite', description: 'Projects received 5 or more appreciations', icon: <Star className="w-4 h-4" />, tone: 'border-purple-300/30 bg-purple-500/10 text-purple-300' });
   return badges;
 }
@@ -30,13 +30,14 @@ const badgeStyles = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full b
 export const CreatorRewardsPage: React.FC = () => {
   const { user } = useAuth();
   const { creations } = usePlatform();
-  const own = creations.filter((creation) => creation.creator_id === user?.id && creation.status === 'approved');
-  const totalAppreciations = own.reduce((sum, creation) => sum + (creation.appreciations_count || 0), 0);
+  const own = creations.filter((creation) => creation.creator_id === user?.id && ['pending', 'approved'].includes(creation.status));
+  const approvedOwn = own.filter((creation) => creation.status === 'approved');
+  const totalAppreciations = approvedOwn.reduce((sum, creation) => sum + (creation.appreciations_count || 0), 0);
   const badges = getCreatorBadges(user?.created_at || new Date().toISOString(), own.length, totalAppreciations);
   const nextMilestone = own.length === 0
-    ? 'Publish your first project to unlock First Build and become eligible for Early Pioneer.'
+    ? 'Submit your first project to unlock First Build and become eligible for Early Pioneer.'
     : own.length < 3
-      ? 'Publish 2 more approved projects to unlock Project Builder.'
+      ? 'Submit 2 more projects to unlock Project Builder.'
       : 'You have reached Project Builder. Keep creating—your milestones are recorded here.';
 
   if (!user) {
@@ -66,10 +67,10 @@ export const CreatorRewardsPage: React.FC = () => {
           <div className="flex-1">
             <p className="text-xs uppercase tracking-wider text-sand-300/60">Creator journey</p>
             <h2 className="text-2xl font-bold text-sand-100">{user.display_name}</h2>
-            <p className="text-sm text-sand-300/70">@{user.username} · {own.length} published {own.length === 1 ? 'project' : 'projects'}</p>
+            <p className="text-sm text-sand-300/70">@{user.username} · {own.length} submitted {own.length === 1 ? 'project' : 'projects'}</p>
           </div>
           <div className="flex gap-3">
-            <div className="rounded-xl bg-forest-950/60 p-3 text-center min-w-20"><strong className="block text-xl text-sand-100">{own.length}</strong><span className="text-[10px] text-sand-300/60 uppercase">Published</span></div>
+            <div className="rounded-xl bg-forest-950/60 p-3 text-center min-w-20"><strong className="block text-xl text-sand-100">{own.length}</strong><span className="text-[10px] text-sand-300/60 uppercase">Submitted</span></div>
             <div className="rounded-xl bg-forest-950/60 p-3 text-center min-w-20"><strong className="block text-xl text-sand-100">{totalAppreciations}</strong><span className="text-[10px] text-sand-300/60 uppercase">Appreciations</span></div>
           </div>
         </div>
@@ -80,7 +81,7 @@ export const CreatorRewardsPage: React.FC = () => {
               {badges.map((badge) => <span key={badge.name} className={badgeStyles + ' ' + badge.tone} title={badge.description}>{badge.icon}{badge.name}</span>)}
             </div>
           ) : (
-            <p className="text-sm text-sand-300/65">Your first badge is waiting for your first approved project.</p>
+            <p className="text-sm text-sand-300/65">Your first badge is waiting for your first project submission.</p>
           )}
           <p className="text-sm text-sand-300/70 mt-4">{nextMilestone}</p>
         </div>
@@ -90,27 +91,27 @@ export const CreatorRewardsPage: React.FC = () => {
         <article className="rounded-2xl border border-sand-200/15 bg-forest-900/35 p-5">
           <h3 className="font-bold text-sand-100">Milestones</h3>
           <ul className="mt-3 space-y-2 text-sm text-sand-300/75">
-            <li>First Build — 1 approved project</li>
-            <li>Project Builder — 3 approved projects</li>
+            <li>First Build — 1 submitted project</li>
+            <li>Project Builder — 3 submitted projects</li>
             <li>Community Favorite — 5 appreciations</li>
           </ul>
         </article>
         <article className="rounded-2xl border border-sand-200/15 bg-forest-900/35 p-5">
           <h3 className="font-bold text-sand-100">Share your recognition</h3>
-          <p className="mt-2 text-sm text-sand-300/75">Print or save this certificate as a PDF. It celebrates your contribution to NIRAULOOM—no paid upgrade required.</p>
-          <button onClick={() => window.print()} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-sand-200 px-4 py-2 text-sm font-bold text-forest-950"><Printer className="w-4 h-4" /> Save certificate / Print</button>
+          <p className="mt-2 text-sm text-sand-300/75">After you submit a project, you can print or save this certificate as a PDF to celebrate contributing to NIRAULOOM—no paid upgrade required.</p>
+          {own.length > 0 ? <button onClick={() => window.print()} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-sand-200 px-4 py-2 text-sm font-bold text-forest-950"><Printer className="w-4 h-4" /> Save certificate / Print</button> : <p className="mt-4 text-xs text-sand-300/60">Submit your first project to unlock your certificate.</p>}
         </article>
       </section>
 
-      <section className="print-certificate hidden print:block border-2 border-emerald-900 p-12 text-center text-slate-900">
+      {own.length > 0 && <section className="print-certificate hidden print:block border-2 border-emerald-900 p-12 text-center text-slate-900">
         <p className="uppercase tracking-[0.3em] text-sm">NIRAULOOM · Creator Recognition</p>
         <h1 className="text-4xl font-serif mt-8">Creator Appreciation</h1>
         <p className="mt-6 text-lg">This certificate recognizes</p>
         <h2 className="text-3xl font-bold mt-3">{user.display_name}</h2>
-        <p className="mt-6 text-lg">for contributing creativity and sharing their work with the NIRAULOOM community.</p>
+        <p className="mt-6 text-lg">for submitting a project and contributing creativity to the NIRAULOOM community.</p>
         <div className="mt-8 flex flex-wrap justify-center gap-2">{badges.map((badge) => <span key={badge.name} className="border border-emerald-900 px-3 py-1 rounded-full text-sm">{badge.name}</span>)}</div>
         <p className="mt-10 text-sm">Discover. Build. Connect.</p>
-      </section>
+      </section>}
 
       <section className="rounded-2xl border border-dashed border-sand-200/20 p-5">
         <h3 className="font-bold text-sand-100">Coming next</h3>
