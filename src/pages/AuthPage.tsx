@@ -19,7 +19,9 @@ export const AuthPage: React.FC = () => {
   const { signInWithPassword, signUp, signInWithOAuth, resetPassword, isLiveSupabase } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const requestedRedirect = new URLSearchParams(location.search).get('redirect');
+  const params = new URLSearchParams(location.search);
+  const referralCode = params.get('ref')?.trim() || undefined;
+  const requestedRedirect = params.get('redirect');
   const safeRedirect = requestedRedirect && requestedRedirect.startsWith('/') && !requestedRedirect.startsWith('//') ? requestedRedirect : null;
 
   const initialMode = new URLSearchParams(location.search).get('mode') === 'signup' ? 'signup' : 'signin';
@@ -50,7 +52,7 @@ export const AuthPage: React.FC = () => {
         }
       } else if (mode === 'signup') {
         trackConversion('signup_form_submitted');
-        const res = await signUp(email, password, username, displayName);
+        const res = await signUp(email, password, username, displayName, referralCode);
         if (res.error) {
           setErrorMsg(res.error);
         } else {
