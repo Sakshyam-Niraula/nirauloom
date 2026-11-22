@@ -98,6 +98,7 @@ export const HomePage: React.FC = () => {
       </section>
 
       <section className="loom-section"><div className="rounded-2xl border border-sand-200/15 bg-forest-900/45 p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-5"><div><p className="loom-eyebrow">COMMUNITY RECOGNITION</p><h2 className="text-3xl text-sand-100 font-bold">Weekly Creator <em className="text-lime-300">Spotlight</em></h2><p className="text-sm text-sand-300/70 mt-2 max-w-xl">Three creators, selected for their work and milestones. Discover projects and celebrate the makers.</p></div><Link to="/spotlight" className="loom-button loom-button-primary shrink-0">Explore Spotlight <ArrowUpRight size={17}/></Link></div></section>
+      <section className="loom-section"><div className="rounded-2xl border border-lime-300/20 bg-forest-900/45 p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-5"><div><p className="loom-eyebrow">BUILD TOGETHER</p><h2 className="text-3xl text-sand-100 font-bold">30 Days. <em className="text-lime-300">One Creation.</em></h2><p className="text-sm text-sand-300/70 mt-2 max-w-xl">Turn an idea into a published project. Join the challenge, earn recognition, and show what you made.</p></div><Link to="/creator-challenge" className="loom-button loom-button-primary shrink-0">Explore Challenge <ArrowUpRight size={17}/></Link></div></section>
 
       <section className="loom-section loom-section-discover">
         <div className="loom-section-heading">

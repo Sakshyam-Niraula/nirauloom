@@ -27,6 +27,7 @@ import { ConversionAnalyticsPage } from './pages/ConversionAnalyticsPage';
 import { CreatorRewardsPage, CreatorWallPage } from './pages/CreatorRecognitionPage';
 import { SpotlightPage } from './pages/SpotlightPage';
 import { SpotlightAdminPage } from './pages/SpotlightAdminPage';
+import { CreatorChallengePage } from './pages/CreatorChallengePage';
 
 export function App() {
   return (
@@ -39,6 +40,7 @@ export function App() {
               <Route path="/explore" element={<ExplorePage />} />
               <Route path="/community" element={<CommunityPage />} />
               <Route path="/spotlight" element={<SpotlightPage />} />
+              <Route path="/creator-challenge" element={<CreatorChallengePage />} />
               <Route path="/categories" element={<CategoriesPage />} />
               <Route path="/creations/:slug" element={<CreationDetailPage />} />
               <Route path="/collections" element={<CollectionsPage />} />
