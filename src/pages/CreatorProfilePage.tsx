@@ -173,6 +173,11 @@ export const CreatorProfilePage: React.FC = () => {
               )}
             </div>
             <p className="text-xs text-sand-300/60 mt-0.5">@{creator.username}</p>
+            {(creator as any).badges?.map((badge: any) => badge.name === 'Master Creator' ? (
+              <span key={badge.name} className="inline-flex items-center gap-1 mt-2 px-2.5 py-1 rounded-full border border-amber-300/40 bg-gradient-to-r from-amber-500/15 to-yellow-400/10 text-amber-200 text-[10px] font-bold uppercase tracking-wider shadow-[0_0_14px_rgba(234,179,8,0.12)]">
+                <span aria-hidden="true">🏆</span> Master Creator
+              </span>
+            ) : null)}
             <p className="text-xs sm:text-sm text-sand-200/90 mt-2 max-w-xl leading-relaxed">
               {creator.bio || 'Digital builder showcasing unique creations on NIRAULOOM.'}
             </p>
