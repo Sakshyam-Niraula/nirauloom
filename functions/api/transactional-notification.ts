@@ -130,8 +130,16 @@ async function sendEmail(env: Env, recipient: string, subject: string, message: 
     headers: { Authorization: `Bearer ${tokenData.access_token}`, "Content-Type": "application/json" },
     body: JSON.stringify({ raw: toB64Url(new TextEncoder().encode(mime)) }),
   });
-  const gmailData = await gmailResponse.json() as { id?: string };
-  if (!gmailResponse.ok || !gmailData.id) throw new Error("Gmail did not accept the notification.");
+  const gmailData = await gmailResponse.json() as {
+    id?: string;
+    error?: { message?: string; status?: string; errors?: Array<{ reason?: string; message?: string }> };
+  };
+  if (!gmailResponse.ok || !gmailData.id) {
+    // Keep Google's actionable error details in the delivery log; never log tokens or message contents.
+    const reason = gmailData.error?.errors?.map((item) => item.reason || item.message).filter(Boolean).join(", ");
+    const detail = [gmailData.error?.status, reason, gmailData.error?.message].filter(Boolean).join(": ");
+    throw new Error(`Gmail API rejected the message (HTTP ${gmailResponse.status})${detail ? `: ${detail}` : "."}`);
+  }
   return gmailData.id;
 }
 
