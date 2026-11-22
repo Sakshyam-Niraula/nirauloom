@@ -8,6 +8,7 @@ import {
   Users,
   Bookmark,
   Bot,
+  Sparkles,
   CheckCircle, 
   XCircle, 
   AlertTriangle, 
@@ -28,7 +29,7 @@ export const ModerationPage: React.FC = () => {
   const { creations, reports, bookmarks, updateCreationStatus, deleteCreation } = usePlatform();
   const { user } = useAuth();
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'pending' | 'reports' | 'all' | 'agents' | 'bookmarks'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'pending' | 'reports' | 'all' | 'agents' | 'bookmarks' | 'spotlight'>('overview');
   const [selectedAgent, setSelectedAgent] = useState<'scout' | 'onboarding' | 'analyst'>('scout');
   const [rejectReasonModal, setRejectReasonModal] = useState<string | null>(null);
   const [rejectionInput, setRejectionInput] = useState('');
@@ -156,6 +157,10 @@ export const ModerationPage: React.FC = () => {
         </button>
 
         <button
+          onClick={() => setActiveTab('spotlight')}
+          className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${activeTab === 'spotlight' ? 'bg-slate-100 text-slate-900 border border-slate-200' : 'text-slate-600 hover:text-slate-900'}`}
+        ><Sparkles className="w-4 h-4 text-indigo-700" /><span>Spotlight</span></button>
+        <button
           onClick={() => setActiveTab('agents')}
           className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
             activeTab === 'agents'
@@ -271,6 +276,8 @@ export const ModerationPage: React.FC = () => {
           </section>
         </div>
       )}
+
+      {activeTab === 'spotlight' && <div className="py-4"><Link to="/moderation/spotlight" className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 text-white px-4 py-2 text-sm font-semibold">Open Spotlight Manager →</Link><p className="text-sm text-slate-600 mt-2">Choose three approved projects from three different creators and publish this week’s recognition.</p></div>}
 
       {/* AI Agent workspace */}
       {activeTab === 'agents' && (

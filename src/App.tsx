@@ -25,6 +25,8 @@ import { GrowthScoutPage } from './pages/GrowthScoutPage';
 import { OutreachAgentPage } from './pages/OutreachAgentPage';
 import { ConversionAnalyticsPage } from './pages/ConversionAnalyticsPage';
 import { CreatorRewardsPage, CreatorWallPage } from './pages/CreatorRecognitionPage';
+import { SpotlightPage } from './pages/SpotlightPage';
+import { SpotlightAdminPage } from './pages/SpotlightAdminPage';
 
 export function App() {
   return (
@@ -36,6 +38,7 @@ export function App() {
               <Route path="/" element={<HomePage />} />
               <Route path="/explore" element={<ExplorePage />} />
               <Route path="/community" element={<CommunityPage />} />
+              <Route path="/spotlight" element={<SpotlightPage />} />
               <Route path="/categories" element={<CategoriesPage />} />
               <Route path="/creations/:slug" element={<CreationDetailPage />} />
               <Route path="/collections" element={<CollectionsPage />} />
@@ -80,6 +83,7 @@ export function App() {
                 }
               />
               <Route path="/outreach-agent" element={<ProtectedRoute adminOnly><OutreachAgentPage /></ProtectedRoute>} />
+              <Route path="/moderation/spotlight" element={<ProtectedRoute adminOnly><SpotlightAdminPage /></ProtectedRoute>} />
               <Route path="/moderation/conversion-analytics" element={<ProtectedRoute adminOnly><ConversionAnalyticsPage /></ProtectedRoute>} />
               <Route path="/ai-discover" element={<AIDiscoverPage />} />
               <Route path="/auth" element={<AuthPage />} />

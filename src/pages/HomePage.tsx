@@ -97,6 +97,8 @@ export const HomePage: React.FC = () => {
         <div className="loom-proof-note"><CircleDot size={13} /> Real work. Real makers. No made-up numbers.</div>
       </section>
 
+      <section className="loom-section"><div className="rounded-2xl border border-sand-200/15 bg-forest-900/45 p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-5"><div><p className="loom-eyebrow">COMMUNITY RECOGNITION</p><h2 className="text-3xl text-sand-100 font-bold">Weekly Creator <em className="text-lime-300">Spotlight</em></h2><p className="text-sm text-sand-300/70 mt-2 max-w-xl">Three creators, selected for their work and milestones. Discover projects and celebrate the makers.</p></div><Link to="/spotlight" className="loom-button loom-button-primary shrink-0">Explore Spotlight <ArrowUpRight size={17}/></Link></div></section>
+
       <section className="loom-section loom-section-discover">
         <div className="loom-section-heading">
           <div><p className="loom-eyebrow">01 / Find your next rabbit hole</p><h2>Explore the <em>unexpected.</em></h2></div>
