@@ -21,6 +21,24 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const LOCAL_STORAGE_USER_KEY = 'nirauloom_active_user';
 
+const requestWelcomeNotification = async (accessToken: string) => {
+  try {
+    const response = await fetch(`${window.location.origin}/api/transactional-notification`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
+      body: JSON.stringify({ event: 'welcome' }),
+    });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      console.warn('Welcome email request failed:', response.status, result);
+    } else {
+      console.info('Welcome email request result:', result);
+    }
+  } catch (error) {
+    console.warn('Welcome email could not be requested:', error);
+  }
+};
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // If Supabase is configured, start strictly with null and wait for real session
   // If in preview mode, load from localStorage or default to Elena
@@ -62,11 +80,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           fetchSupabaseProfile(session.user.id);
           // The server records a unique welcome delivery per account, so later logins do not resend it.
           if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session.access_token) {
-            void fetch(`${window.location.origin}/api/transactional-notification`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
-              body: JSON.stringify({ event: 'welcome' }),
-            }).catch((error) => console.warn('Welcome email could not be requested:', error));
+            void requestWelcomeNotification(session.access_token);
           }
         } else {
           setUser(null);
@@ -115,8 +129,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signInWithPassword = async (email: string, pass: string): Promise<{ error?: string }> => {
     if (isSupabaseConfigured && supabase) {
-      const { error } = await supabase.auth.signInWithPassword({ email, password: pass });
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password: pass });
       if (error) return { error: error.message };
+      if (data.session?.access_token) {
+        void requestWelcomeNotification(data.session.access_token);
+      }
       return {};
     }
 
