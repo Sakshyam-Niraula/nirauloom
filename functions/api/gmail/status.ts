@@ -8,7 +8,7 @@ interface Env {
 const SUPABASE_URL = "https://jqggrvirneqygwzbrebl.supabase.co";
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json", "Cache-Control": "no-store" } });
 async function verifyAdmin(request: Request, anonKey: string): Promise<string | null> {
-  const token = request.headers.get("Authorization")?.replace(/^Bearer\\s+/i, "");
+  const token = request.headers.get("Authorization")?.replace(/^Bearer\s+/i, "");
   if (!token || !anonKey) return null;
   const headers = { apikey: anonKey, Authorization: `Bearer ${token}` };
   const auth = await fetch(`${SUPABASE_URL}/auth/v1/user`, { headers });
