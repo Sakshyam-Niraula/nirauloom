@@ -48,7 +48,7 @@ export const OutreachAgentPage: React.FC = () => {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [lastRun, setLastRun] = useState("");
-  const [gmailStatus, setGmailStatus] = useState<{ connected: boolean; email?: string | null; configured?: boolean }>({ connected: false, configured: false });
+  const [gmailStatus, setGmailStatus] = useState<{ connected: boolean; email?: string | null; configured?: boolean; reconnectRequired?: boolean; error?: string }>({ connected: false, configured: false });
   const [connectingGmail, setConnectingGmail] = useState(false);
   const [sendingId, setSendingId] = useState<string | null>(null);
 
@@ -258,13 +258,13 @@ export const OutreachAgentPage: React.FC = () => {
         {gmailStatus.connected ? (
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div><p className="text-sm font-semibold text-emerald-300">Connected</p><p className="text-xs text-sand-300/70">{gmailStatus.email}</p></div>
-            <span className="inline-flex items-center gap-2 rounded-xl border border-emerald-400/20 px-3 py-2 text-xs text-emerald-200"><Link2 className="w-4 h-4" /> Authorized</span>
+            <span className="inline-flex items-center gap-2 rounded-xl border border-emerald-400/20 px-3 py-2 text-xs text-emerald-200"><Link2 className="w-4 h-4" /> Verified</span>
           </div>
         ) : (
           <>
             <p className="text-xs text-sand-200/75">Connect the dedicated Nirauloom Gmail account. Google will ask you to sign in and grant the Gmail sending permission.</p>
-            <button onClick={connectGmail} disabled={connectingGmail || gmailStatus.configured === false} className="inline-flex items-center gap-2 rounded-xl bg-electric-600 hover:bg-electric-500 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50"><Link2 className="w-4 h-4" />{connectingGmail ? "Opening Google…" : "Connect Gmail"}</button>
-            {gmailStatus.configured === false && <p className="text-xs text-amber-200/80">Server setup is not complete yet. Add the Cloudflare secrets listed in the setup instructions before connecting.</p>}
+            <button onClick={connectGmail} disabled={connectingGmail || gmailStatus.configured === false} className="inline-flex items-center gap-2 rounded-xl bg-electric-600 hover:bg-electric-500 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50"><Link2 className="w-4 h-4" />{connectingGmail ? "Opening Google…" : gmailStatus.reconnectRequired ? "Reconnect Gmail" : "Connect Gmail"}</button>
+            {gmailStatus.configured === false && <p className="text-xs text-amber-200/80">Server setup is not complete yet. Add the Cloudflare secrets listed in the setup instructions before connecting.</p>}{gmailStatus.error && <p className="text-xs text-amber-200/90">{gmailStatus.error}</p>}{gmailStatus.connected && <p className="text-xs text-emerald-200/70">Gmail authorization verified successfully.</p>}
           </>
         )}
         <p className="text-xs text-sand-300/55">Connecting Gmail does not enable automatic sending. Outreach remains paused until sending safeguards and a test workflow are implemented.</p>
