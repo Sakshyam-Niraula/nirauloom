@@ -107,9 +107,16 @@ async function sendEmail(env: Env, recipient: string, subject: string, message: 
       grant_type: "refresh_token",
     }),
   });
-  const tokenData = await tokenResponse.json() as { access_token?: string; error?: string };
+  const tokenData = await tokenResponse.json() as {
+    access_token?: string;
+    error?: string;
+    error_description?: string;
+  };
   if (!tokenResponse.ok || !tokenData.access_token) {
-    throw new Error("Gmail authorization failed. Reconnect the sender.");
+    const reason = tokenData.error || "unknown_oauth_error";
+    const description = tokenData.error_description || "";
+    console.error("gmail_refresh_failed", tokenResponse.status, reason, description.slice(0, 240));
+    throw new Error(`Google token refresh failed (HTTP ${tokenResponse.status}): ${reason}${description ? ` — ${description.slice(0, 240)}` : ""}. Reconnect Gmail from Outreach Agent.`);
   }
 
   const subjectBase64 = toB64(new TextEncoder().encode(subject));
