@@ -61,7 +61,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (session?.user) {
           fetchSupabaseProfile(session.user.id);
           // The server records a unique welcome delivery per account, so later logins do not resend it.
-          if (event === 'SIGNED_IN' && session.access_token) {
+          if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session.access_token) {
             void fetch(`${window.location.origin}/api/transactional-notification`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
