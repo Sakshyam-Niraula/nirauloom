@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Award, Crown, Sparkles, Star, Users, Printer, Download, ArrowRight, Loader2 } from 'lucide-react';
+import { Award, Crown, Sparkles, Star, Users, Printer, Download, ArrowRight, Loader2, UserPlus, Copy } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { usePlatform } from '../context/PlatformContext';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
@@ -16,11 +16,12 @@ type WallCreator = {
 
 type BadgeInfo = { name: string; description: string; icon: React.ReactNode; tone: string };
 
-function getCreatorBadges(joinedAt: string, submitted: number, appreciations: number): BadgeInfo[] {
+function getCreatorBadges(joinedAt: string, submitted: number, appreciations: number, qualifiedInvites = 0): BadgeInfo[] {
   const badges: BadgeInfo[] = [];
   if (submitted >= 1) badges.push({ name: 'First Build', description: 'Submitted their first project to NIRAULOOM', icon: <Sparkles className="w-4 h-4" />, tone: 'border-emerald-300/30 bg-emerald-500/10 text-emerald-300' });
   if (submitted >= 1 && new Date(joinedAt) <= new Date('2026-12-31T23:59:59Z')) badges.push({ name: 'Early Pioneer', description: 'Joined during NIRAULOOM’s early launch era', icon: <Crown className="w-4 h-4" />, tone: 'border-amber-300/30 bg-amber-500/10 text-amber-300' });
   if (submitted >= 3) badges.push({ name: 'Project Builder', description: 'Submitted 3 or more projects', icon: <Award className="w-4 h-4" />, tone: 'border-sky-300/30 bg-sky-500/10 text-sky-300' });
+  if (qualifiedInvites >= 3) badges.push({ name: 'Community Contributor', description: 'Invited three creators who each published an approved project', icon: <Users className="w-4 h-4" />, tone: 'border-violet-300/30 bg-violet-500/10 text-violet-300' });
   if (appreciations >= 5) badges.push({ name: 'Community Favorite', description: 'Projects received 5 or more appreciations', icon: <Star className="w-4 h-4" />, tone: 'border-purple-300/30 bg-purple-500/10 text-purple-300' });
   return badges;
 }
@@ -98,6 +99,10 @@ export const CreatorRewardsPage: React.FC = () => {
   const [projectsLoading, setProjectsLoading] = useState(false);
   const [loadError, setLoadError] = useState('');
   const [refreshKey, setRefreshKey] = useState(0);
+  const [referralCode, setReferralCode] = useState('');
+  const [qualifiedInvites, setQualifiedInvites] = useState(0);
+  const [referralLoading, setReferralLoading] = useState(false);
+  const [copyDone, setCopyDone] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -130,6 +135,22 @@ export const CreatorRewardsPage: React.FC = () => {
     return () => { active = false; };
   }, [user?.id, creations, refreshKey]);
 
+  useEffect(() => {
+    let active = true;
+    async function loadReferralStats() {
+      if (!user?.id || !supabase || !isSupabaseConfigured) return;
+      setReferralLoading(true);
+      const { data: codeRow } = await supabase.from('creator_referral_codes').select('code').eq('user_id', user.id).maybeSingle();
+      const code = codeRow?.code || (user.username.toLowerCase().replace(/[^a-z0-9]/g,'') + '-' + user.id.slice(0,8));
+      if (!codeRow?.code) {
+        await supabase.from('creator_referral_codes').insert({ user_id: user.id, code }).select('code').maybeSingle();
+      }
+      const { count } = await supabase.from('creator_referrals').select('referred_user_id', { count: 'exact', head: true }).eq('referrer_user_id', user.id).not('qualified_at','is',null);
+      if (active) { setReferralCode(code); setQualifiedInvites(count || 0); setReferralLoading(false); }
+    }
+    void loadReferralStats();
+    return () => { active = false; };
+  }, [user?.id, user?.username]);
   if (authLoading) return <main className="max-w-3xl mx-auto px-4 py-24 text-center text-sand-200"><Loader2 className="w-7 h-7 animate-spin mx-auto mb-3" />Checking your NIRAULOOM account…</main>;
 
   if (!user) return (
@@ -144,7 +165,7 @@ export const CreatorRewardsPage: React.FC = () => {
   const submitted = projects.length;
   const approved = projects.filter((project) => project.status === 'approved');
   const totalAppreciations = approved.reduce((sum, project) => sum + (project.appreciations_count || 0), 0);
-  const badges = getCreatorBadges(user.created_at || new Date().toISOString(), submitted, totalAppreciations);
+  const badges = getCreatorBadges(user.created_at || new Date().toISOString(), submitted, totalAppreciations, qualifiedInvites);
   const firstProject = projects[0];
   const nextMilestone = submitted === 0
     ? 'Submit your first project to unlock First Build and your certificate.'

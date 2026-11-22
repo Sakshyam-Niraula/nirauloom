@@ -9,7 +9,7 @@ interface AuthContextType {
   loading: boolean;
   isLiveSupabase: boolean;
   signInWithPassword: (email: string, pass: string) => Promise<{ error?: string }>;
-  signUp: (email: string, pass: string, username: string, displayName: string) => Promise<{ error?: string; message?: string }>;
+  signUp: (email: string, pass: string, username: string, displayName: string, referralCode?: string) => Promise<{ error?: string; message?: string }>;
   signInWithOAuth: (provider: 'google' | 'github', redirectTo?: string) => Promise<{ error?: string }>;
   resetPassword: (email: string) => Promise<{ error?: string; message?: string }>;
   signOut: () => Promise<void>;
@@ -128,7 +128,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return {};
   };
 
-  const signUp = async (email: string, pass: string, username: string, displayName: string): Promise<{ error?: string; message?: string }> => {
+  const signUp = async (email: string, pass: string, username: string, displayName: string, referralCode?: string): Promise<{ error?: string; message?: string }> => {
     if (isSupabaseConfigured && supabase) {
       const { error } = await supabase.auth.signUp({
         email,
@@ -140,6 +140,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           data: {
             username,
             full_name: displayName,
+            ...(referralCode ? { referral_code: referralCode.trim() } : {}),
           }
         }
       });
