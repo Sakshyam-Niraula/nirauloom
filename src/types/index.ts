@@ -8,6 +8,7 @@ export interface Profile {
   twitter?: string;
   github?: string;
   is_admin?: boolean;
+  badges?: Array<{ name: string; description?: string; awarded_at?: string; awarded_by?: string }>; 
   created_at: string;
 }
 
