@@ -194,6 +194,27 @@ export const PlatformProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     localStorage.setItem(LOCAL_REPORTS_KEY, JSON.stringify(reports));
   }, [reports]);
 
+  const requestEmailNotification = async (event: 'submitted' | 'approved' | 'rejected', creationId: string) => {
+    if (!supabase) return;
+    try {
+      const { data } = await supabase.auth.getSession();
+      const accessToken = data.session?.access_token;
+      if (!accessToken) return;
+      const response = await fetch(`${window.location.origin}/api/transactional-notification`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
+        body: JSON.stringify({ event, creationId }),
+      });
+      if (!response.ok) {
+        const result = await response.json().catch(() => ({}));
+        console.warn(`Nirauloom ${event} email was not sent:`, result);
+      }
+    } catch (error) {
+      // Email delivery must never undo a saved project or moderation decision.
+      console.warn(`Nirauloom ${event} email request failed:`, error);
+    }
+  };
+
   // Actions
   const toggleBookmark = async (creationId: string): Promise<boolean> => {
     const isBookmarked = bookmarks.includes(creationId);
@@ -311,6 +332,7 @@ export const PlatformProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           status,
         });
         if (insertError) return { success: false, error: insertError.message };
+        void requestEmailNotification('submitted', id);
       } catch (err) {
         console.warn('Failed to insert into live Supabase:', err);
         return { success: false, error: err instanceof Error ? err.message : 'Could not save your project.' };
@@ -341,6 +363,9 @@ export const PlatformProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (!data?.id) {
         console.error('No creation was updated. Check the signed-in admin profile and creations UPDATE policy.');
         return false;
+      }
+      if (status === 'approved' || status === 'rejected') {
+        void requestEmailNotification(status, creationId);
       }
     }
 

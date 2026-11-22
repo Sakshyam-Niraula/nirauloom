@@ -56,10 +56,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       // 2. Subscribe to auth state changes
-      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
         setSession(session);
         if (session?.user) {
           fetchSupabaseProfile(session.user.id);
+          // The server records a unique welcome delivery per account, so later logins do not resend it.
+          if (event === 'SIGNED_IN' && session.access_token) {
+            void fetch(`${window.location.origin}/api/transactional-notification`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+              body: JSON.stringify({ event: 'welcome' }),
+            }).catch((error) => console.warn('Welcome email could not be requested:', error));
+          }
         } else {
           setUser(null);
           setLoading(false);
